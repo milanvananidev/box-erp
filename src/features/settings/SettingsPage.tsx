@@ -35,6 +35,7 @@ import {
   useForgetDb,
   useUpdateCompanySettings,
 } from "./api";
+import { AppUpdatesView, APP_VERSION, type ReleaseInfo } from "./components/AppUpdatesView";
 
 function CompanySettingsView() {
   const settingsQuery = useCompanySettings();
@@ -483,11 +484,49 @@ function ShortcutsView() {
 
 export default function SettingsPage() {
   usePageMeta("Settings", "Company profile, database connection & system shortcuts");
-  const [activeTab, setActiveTab] = useState<"company" | "database" | "shortcuts">("company");
+  const [activeTab, setActiveTab] = useState<"company" | "database" | "updates" | "shortcuts">("company");
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [lastRelease, setLastRelease] = useState<ReleaseInfo | null>(null);
+  const [hasChecked, setHasChecked] = useState(false);
+
+  const handleCheckUpdate = async (silent = false) => {
+    setIsCheckingUpdate(true);
+    try {
+      const res = await fetch("https://api.github.com/repos/milanvananidev/box-erp/releases/latest");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: ReleaseInfo = await res.json();
+      setLastRelease(data);
+      setHasChecked(true);
+
+      const latestClean = data.tag_name.replace(/^v/, "");
+      const isNewer = latestClean.localeCompare(APP_VERSION, undefined, { numeric: true }) > 0;
+      if (isNewer) {
+        toast.info(`New version ${data.tag_name} is available!`, {
+          description: "An updated Windows installer (.exe) is ready to download.",
+          action: {
+            label: "View Update",
+            onClick: () => setActiveTab("updates"),
+          },
+        });
+      } else if (!silent) {
+        toast.success("BoxERP is up to date", {
+          description: `You are running the latest version (v${APP_VERSION}).`,
+        });
+      }
+    } catch (e) {
+      if (!silent) {
+        toast.error("Couldn't check for updates", {
+          description: e instanceof Error ? e.message : "Please check your network connection.",
+        });
+      }
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between border-b border-border pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
           <TabsList>
             <TabsTrigger value="company" className="flex items-center gap-2">
@@ -496,15 +535,39 @@ export default function SettingsPage() {
             <TabsTrigger value="database" className="flex items-center gap-2">
               <Database className="size-4" /> Database Connection
             </TabsTrigger>
+            <TabsTrigger value="updates" className="flex items-center gap-2">
+              <RefreshCw className="size-4" /> App & Updates
+            </TabsTrigger>
             <TabsTrigger value="shortcuts" className="flex items-center gap-2">
               <Keyboard className="size-4" /> Shortcuts
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleCheckUpdate(false)}
+            loading={isCheckingUpdate}
+            className="text-xs h-8 gap-1.5 cursor-pointer shadow-2xs"
+            title="Check for software updates from GitHub"
+          >
+            <RefreshCw className="size-3.5" /> Check for Updates
+          </Button>
+        </div>
       </div>
 
       {activeTab === "company" && <CompanySettingsView />}
       {activeTab === "database" && <DatabaseSettingsView />}
+      {activeTab === "updates" && (
+        <AppUpdatesView
+          isChecking={isCheckingUpdate}
+          onCheck={() => handleCheckUpdate(false)}
+          lastRelease={lastRelease}
+          hasChecked={hasChecked}
+        />
+      )}
       {activeTab === "shortcuts" && <ShortcutsView />}
     </div>
   );
