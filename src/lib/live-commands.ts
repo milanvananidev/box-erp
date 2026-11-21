@@ -87,7 +87,6 @@ export const LIVE_MODULES = [
   "Dashboard",
   "Income & Expenses",
   "Workers & HR",
-  "Production",
   "Box Costing",
   "Inventory",
   "Payroll",

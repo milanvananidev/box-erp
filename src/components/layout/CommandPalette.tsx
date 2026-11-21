@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, Factory, HandCoins, UserCheck, UserPlus, PackagePlus, PanelLeft, Package, User } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Calculator, HandCoins, UserCheck, UserPlus, PackagePlus, PanelLeft, Package, User } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
@@ -10,7 +10,6 @@ import { useUI } from "@/stores/ui";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
 import { useMaterials } from "@/features/inventory/api";
 import { useWorkerRoster } from "@/features/workers/api";
-import { useProductionOrders } from "@/features/production/api";
 
 export function CommandPalette() {
   const open = useUI((s) => s.commandOpen);
@@ -18,7 +17,6 @@ export function CommandPalette() {
   const openTxn = useUI((s) => s.openTxnSheet);
   const toggleSidebar = useUI((s) => s.toggleSidebar);
   const navigate = useNavigate();
-  const { data: productionOrders = [] } = useProductionOrders();
   const { data: roster = [] } = useWorkerRoster();
   const workers = roster.filter((w) => w.active);
   const { data: materials = [] } = useMaterials();
@@ -35,7 +33,7 @@ export function CommandPalette() {
         <DialogTitle className="sr-only">Command palette</DialogTitle>
         <DialogDescription className="sr-only">Search pages, records and actions</DialogDescription>
         <Command loop>
-          <CommandInput placeholder="Search orders, workers, materials, or type a command…" />
+          <CommandInput placeholder="Search workers, materials, or type a command…" />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup heading="Actions">
@@ -45,8 +43,8 @@ export function CommandPalette() {
               <CommandItem value="add income receipt in" onSelect={() => run(() => openTxn("in"))}>
                 <ArrowDownLeft /> Add income <Kbd className="ml-auto">{modKeyLabel}⇧I</Kbd>
               </CommandItem>
-              <CommandItem value="new production order start" onSelect={() => run(() => navigate("/production?new=1"))}>
-                <Factory /> New production order
+              <CommandItem value="box costing quotation estimate calculator" onSelect={() => run(() => navigate("/costing"))}>
+                <Calculator /> Box costing & estimate
               </CommandItem>
               <CommandItem value="mark attendance" onSelect={() => run(() => navigate("/workers"))}>
                 <UserCheck /> Mark attendance
@@ -78,14 +76,6 @@ export function CommandPalette() {
               ))}
             </CommandGroup>
             <CommandSeparator />
-            <CommandGroup heading="Production orders">
-              {productionOrders.map((o) => (
-                <CommandItem key={o.id} value={`${o.orderNo} ${o.customer} ${o.product}`} onSelect={() => run(() => navigate(`/production?view=all&order=${o.id}`))}>
-                  <Factory /> <span className="font-medium">{o.orderNo}</span>
-                  <span className="truncate text-muted-foreground">{o.customer} · {o.product}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
             <CommandGroup heading="Workers">
               {workers.map((w) => (
                 <CommandItem key={w.id} value={`${w.name} ${w.code} ${w.department}`} onSelect={() => run(() => navigate(`/workers?tab=workers&worker=${w.id}`))}>

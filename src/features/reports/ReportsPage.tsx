@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeftRight, CalendarCheck, Factory, Landmark, Receipt, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, CalendarCheck, Landmark, Receipt, Wallet, type LucideIcon } from "lucide-react";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,7 +32,6 @@ const REPORTS: { group: string; items: { id: ReportId; label: string; hint: stri
       { id: "payroll", label: "Payroll Register", hint: "Gross, deductions, paid", icon: Wallet },
     ],
   },
-  { group: "Operations", items: [{ id: "production", label: "Production Summary", hint: "Output, wastage, delivery", icon: Factory }] },
 ];
 
 export default function ReportsPage() {

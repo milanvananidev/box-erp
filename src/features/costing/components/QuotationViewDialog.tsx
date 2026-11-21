@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Printer, Copy, Factory } from "lucide-react";
+import { Printer, Copy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,6 @@ export function QuotationViewDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const navigate = useNavigate();
   const company = useCompany();
   const [printing, setPrinting] = useState(false);
 
@@ -46,22 +44,6 @@ For any queries, please call: ${company.phone}`;
 
     navigator.clipboard.writeText(summaryText);
     toast.success("Quotation summary copied to clipboard for WhatsApp!");
-  };
-
-  const handleConvertToProductionOrder = () => {
-    const params = new URLSearchParams({
-      new: "1",
-      customer: quotation.clientName,
-      product: `${quotation.boxName} (${quotation.input.ply}-Ply)`,
-      qty: String(quotation.quantity),
-      l: String(quotation.input.lengthMm),
-      w: String(quotation.input.widthMm),
-      h: String(quotation.input.heightMm),
-      ply: String(quotation.input.ply),
-      rate: String(Math.round(quotation.basicPrice * 100)),
-    });
-    onOpenChange(false);
-    navigate(`/production?${params.toString()}`);
   };
 
   const formattedDate = quotation.date
@@ -190,15 +172,7 @@ For any queries, please call: ${company.phone}`;
           </div>
 
           {/* Bottom Actions */}
-          <div className="flex justify-between items-center pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleConvertToProductionOrder}
-              className="text-brand-700 border-brand-300 hover:bg-brand-50"
-            >
-              <Factory className="size-4" /> Convert to Production Order
-            </Button>
+          <div className="flex justify-end items-center pt-2">
             <div className="text-right text-[11px] text-muted-foreground">
               Authorized Signature: _________________________
             </div>

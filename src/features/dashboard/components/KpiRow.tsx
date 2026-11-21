@@ -1,7 +1,7 @@
-import { ArrowDownToLine, ArrowUpRight, Package, Users } from "lucide-react";
+import { ArrowDownToLine, ArrowUpRight, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/shared/StatCard";
-import { formatINR, formatQty, formatPercent } from "@/lib/format";
+import { formatINR, formatPercent } from "@/lib/format";
 import { useDashboardSummary } from "../api";
 
 export function KpiRow() {
@@ -34,14 +34,13 @@ export function KpiRow() {
         onClick={() => navigate("/finance?direction=out")}
       />
       <StatCard
-        label="Production (Today)"
-        icon={Package}
+        label="Operating Margin"
+        icon={TrendingUp}
         tone="info"
         loading={isLoading}
-        value={data && formatQty(data.productionToday.value, "pcs")}
-        changePct={data?.productionToday.changePct}
-        comparison="vs yesterday"
-        onClick={() => navigate("/production")}
+        value={data && formatINR(data.operatingProfit.value)}
+        comparison="this month"
+        onClick={() => navigate("/reports")}
       />
       <StatCard
         label="Workers Present"

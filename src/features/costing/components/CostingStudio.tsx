@@ -1,11 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Sparkles,
   RotateCcw,
   Save,
-  Factory,
   Boxes,
   Layers,
   Percent,
@@ -64,7 +62,6 @@ export function CostingStudio({
   initialBox?: CorrugatedBoxInput | null;
   onQuotationCreated?: () => void;
 }) {
-  const navigate = useNavigate();
   const partiesQuery = useParties();
   const paperRatesQuery = usePaperRates();
   const saveQuotationMutation = useSaveQuotation();
@@ -229,23 +226,6 @@ export function CostingStudio({
         description: e instanceof Error ? e.message : undefined,
       });
     }
-  };
-
-  const handleConvertToProductionOrder = () => {
-    // Navigate to production page with prefilled parameters
-    const params = new URLSearchParams({
-      new: "1",
-      customer: input.client || "",
-      product: `${input.boxName || "Carton"} (${input.ply}-Ply)`,
-      qty: String(input.orderQty || 1000),
-      l: String(input.lengthMm),
-      w: String(input.widthMm),
-      h: String(input.heightMm),
-      ply: String(input.ply),
-      flute: input.ply >= 5 ? "AB" : "B",
-      rate: String(Math.round(result.basicPrice * 100)), // in paise
-    });
-    navigate(`/production?${params.toString()}`);
   };
 
   return (
@@ -750,13 +730,6 @@ export function CostingStudio({
                   className="w-full"
                 >
                   <Save className="size-4" /> Save as Quotation
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleConvertToProductionOrder}
-                  className="w-full border-brand-300 text-brand-700 hover:bg-brand-50"
-                >
-                  <Factory className="size-4" /> Create Production Order
                 </Button>
               </div>
             </CardContent>

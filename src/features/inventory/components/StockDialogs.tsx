@@ -215,15 +215,17 @@ export function IssueDialog({ open, materialId, orderId, onOpenChange }: { open:
             <Input id="is-date" type="date" max={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} />
           </FormField>
         </div>
-        <FormField label="Production order" hint="Links consumption to the job for paper-usage tracking">
-          <Select value={oid} onValueChange={setOid}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>General use / not linked</SelectItem>
-              {active.map((o) => <SelectItem key={o.id} value={o.id}>{o.orderNo} · {o.customer} · {o.product}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </FormField>
+        {active.length > 0 && (
+          <FormField label="Production order" hint="Links consumption to the job for paper-usage tracking">
+            <Select value={oid} onValueChange={setOid}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>General use / not linked</SelectItem>
+                {active.map((o) => <SelectItem key={o.id} value={o.id}>{o.orderNo} · {o.customer} · {o.product}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
         {plan && (
           <div className="grid grid-cols-3 gap-3 rounded-xl border border-brand-100 bg-brand-50/60 p-3 text-sm tabular">
             <div><div className="text-xs text-muted-foreground">Paper needed (est.)</div><div className="font-semibold">{formatQty(plan.needed, "kg")}</div></div>

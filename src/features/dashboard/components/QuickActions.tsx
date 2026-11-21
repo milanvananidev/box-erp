@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { SquarePlus, Factory, UserCheck, ReceiptIndianRupee, PackagePlus, FileText } from "lucide-react";
+import { SquarePlus, Calculator, UserCheck, ReceiptIndianRupee, PackagePlus, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hint } from "@/components/ui/tooltip";
@@ -21,7 +21,7 @@ export function QuickActions({ className }: { className?: string }) {
   const actions: Action[] = [
     { label: "Add Income", icon: SquarePlus, onClick: () => openTxn("in"), shortcut: `${modKeyLabel}⇧I` },
     { label: "Add Expense", icon: ReceiptIndianRupee, onClick: () => openTxn("out"), shortcut: `${modKeyLabel}⇧E` },
-    { label: "New Production Order", icon: Factory, onClick: () => navigate("/production?new=1") },
+    { label: "Box Costing", icon: Calculator, onClick: () => navigate("/costing") },
     { label: "Mark Attendance", icon: UserCheck, onClick: () => navigate("/workers") },
     { label: "Material Inward", icon: PackagePlus, onClick: () => navigate("/inventory?inward=1") },
     { label: "Reports", icon: FileText, onClick: () => navigate("/reports") },
