@@ -12,20 +12,20 @@
  * never raw hex values, so the palette can be tuned in one place.
  */
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
-  /* Surfaces */
-  --background: #f6f7f9;
-  --foreground: #1b2130;
+  /* Surfaces - Clean Neutral Desktop Slate */
+  --background: #f4f5f7;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #1b2130;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #1b2130;
-  --muted: #f2f3f5;
-  --muted-foreground: #667085;
-  --subtle: #f8f9fb;
-  --border: #e6e8ec;
-  --input: #dfe2e7;
+  --popover-foreground: #0f172a;
+  --muted: #f1f3f5;
+  --muted-foreground: #64748b;
+  --subtle: #f8fafc;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
   --ring: #c48a47;
 
   /* Brand — corrugated cardboard */
@@ -188,28 +188,38 @@
   body,
   #root {
     height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable="true"],
+  .selectable {
+    user-select: text;
+    -webkit-user-select: text;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv11", "ss01";
-    /* Desktop app: no rubber-band scroll, no accidental text selection on chrome */
     overscroll-behavior: none;
+    letter-spacing: -0.011em;
   }
   .tabular {
     font-variant-numeric: tabular-nums;
   }
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #d5d8de;
-    border-radius: 999px;
-    border: 3px solid transparent;
-    background-clip: content-box;
+    background: rgba(100, 116, 139, 0.22);
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #b9bec7;
+    background: rgba(100, 116, 139, 0.4);
   }
 }
 

@@ -34,42 +34,51 @@ function DbBanner() {
   const { data, isLoading } = useDbStatus();
   if (dataSource !== "tauri" || isLoading || data?.connected) return null;
   return (
-    <div className="no-print flex items-center gap-3 border-b border-warning/30 bg-warning-soft px-7 py-2 text-[13px] text-warning-foreground">
-      <span className="font-medium">{data?.configured ? "Can't reach the database." : "Database not set up on this computer."}</span>
-      <span className="text-[#5f4a00]">{data?.error ?? "Income & Expenses and Workers screens need it."}</span>
-      <Link to="/settings" className="ml-auto font-medium underline underline-offset-2">Open Settings</Link>
+    <div className="no-print flex items-center gap-2 border-b border-warning/30 bg-warning-soft px-4 py-1 text-xs text-warning-foreground">
+      <span className="font-semibold">{data?.configured ? "Can't reach database." : "Database not connected."}</span>
+      <span className="text-[#5f4a00] truncate">{data?.error ?? "Financial transactions require a live connection."}</span>
+      <Link to="/settings" className="ml-auto font-medium underline underline-offset-2">Settings</Link>
     </div>
   );
 }
 
 export function AppShell() {
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground select-none">
       <GlobalHotkeys />
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar />
         <DbBanner />
-        <main className="flex-1 overflow-y-auto flex flex-col justify-between">
-          <div className="mx-auto w-full max-w-[1680px] px-5 py-5 xl:px-6 flex-1">
+        <main className="flex-1 overflow-y-auto">
+          <div className="h-full w-full p-4 lg:p-5">
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
           </div>
-          <footer className="no-print mt-auto border-t border-border/60 bg-card/50 px-7 py-3 text-center text-xs text-muted-foreground backdrop-blur-xs">
-            <span>BoxERP · Corrugated Box Packaging ERP · Developed by </span>
+        </main>
+        {/* Sleek Native Desktop Status Bar */}
+        <footer className="no-print flex h-6 shrink-0 select-none items-center justify-between border-t border-border bg-card/70 px-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="flex size-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+            <span className="font-medium text-foreground/80">BoxERP v0.1.0</span>
+            <span className="text-border">|</span>
+            <span>Desktop Workspace</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>Developed by</span>
             <a
               href="https://www.dhyeytechnologies.in/"
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors cursor-pointer inline-flex items-center gap-1"
+              className="font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors cursor-pointer inline-flex items-center gap-0.5"
             >
-              Dhyey Technologies <ExternalLink className="size-3 inline" />
+              Dhyey Technologies <ExternalLink className="size-2.5 inline" />
             </a>
-          </footer>
-        </main>
+          </div>
+        </footer>
       </div>
       <CommandPalette />
       <TransactionSheet />

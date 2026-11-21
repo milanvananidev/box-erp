@@ -15,9 +15,11 @@
         "title": "BoxERP",
         "width": 1440,
         "height": 900,
-        "minWidth": 1280,
+        "minWidth": 1200,
         "minHeight": 720,
-        "center": true
+        "center": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

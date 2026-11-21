@@ -1,13 +1,17 @@
 import { Bell, ChevronDown, Keyboard, LogOut, Search, Settings, PackageX, CalendarClock, ArrowDownLeft, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as Popover from "@radix-ui/react-popover";
-import { Button } from "@/components/ui/button";
 import { usePageMetaStore } from "@/hooks/use-page-meta";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
 import { useUI } from "@/stores/ui";
 import { Kbd } from "@/components/ui/kbd";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAlerts } from "@/features/alerts/api";
 import { cn } from "@/lib/utils";
@@ -18,44 +22,48 @@ function NotificationsButton() {
   return (
     <Popover.Root>
       <Popover.Trigger
-        className="relative flex size-10 items-center justify-center rounded-full text-[#475467] transition-colors cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="relative flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors cursor-pointer hover:bg-black/5 hover:text-foreground focus-visible:outline-none"
         aria-label={`Notifications (${alerts.length})`}
       >
-        <Bell className="size-[22px]" strokeWidth={1.75} />
+        <Bell className="size-3.5" />
         {alerts.length > 0 && (
-          <span className="absolute top-1.5 right-2 size-2.5 rounded-full bg-danger ring-2 ring-card" />
+          <span className="absolute top-1 right-1 size-1.5 rounded-full bg-danger ring-1 ring-card" />
         )}
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           align="end"
-          sideOffset={8}
-          className="z-50 w-[360px] rounded-xl border border-border bg-popover shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          sideOffset={6}
+          className="z-50 w-80 rounded-lg border border-border bg-popover shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <span className="text-sm font-semibold">Alerts</span>
-            <span className="text-xs text-muted-foreground">{alerts.length} need attention</span>
+          <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs font-semibold">
+            <span>Alerts</span>
+            <span className="text-[11px] font-normal text-muted-foreground">{alerts.length} require attention</span>
           </div>
-          <ul className="max-h-80 overflow-y-auto p-1.5">
-            {alerts.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted-foreground">You're all caught up.</li>}
+          <ul className="max-h-72 overflow-y-auto p-1">
+            {alerts.length === 0 && (
+              <li className="px-3 py-5 text-center text-xs text-muted-foreground">You're all caught up.</li>
+            )}
             {alerts.map((a) => (
               <li key={a.id}>
                 <Popover.Close asChild>
                   <button
                     onClick={() => navigate(a.href)}
-                    className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-muted"
+                    className="flex w-full items-start gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-muted text-xs cursor-pointer"
                   >
                     <span
                       className={cn(
-                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-                        a.kind === "low_stock" ? "bg-danger-soft text-danger-foreground" : "bg-warning-soft text-warning-foreground",
+                        "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded",
+                        a.kind === "low_stock"
+                          ? "bg-danger-soft text-danger-foreground"
+                          : "bg-warning-soft text-warning-foreground",
                       )}
                     >
-                      {a.kind === "low_stock" ? <PackageX className="size-4" /> : <CalendarClock className="size-4" />}
+                      {a.kind === "low_stock" ? <PackageX className="size-3" /> : <CalendarClock className="size-3" />}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-medium">{a.title}</span>
-                      <span className="block text-xs text-muted-foreground">{a.detail}</span>
+                      <span className="block font-medium text-foreground">{a.title}</span>
+                      <span className="block text-[11px] text-muted-foreground truncate">{a.detail}</span>
                     </span>
                   </button>
                 </Popover.Close>
@@ -69,74 +77,81 @@ function NotificationsButton() {
 }
 
 export function Topbar() {
-  const { title, subtitle } = usePageMetaStore();
+  const { title } = usePageMetaStore();
   const setCommandOpen = useUI((s) => s.setCommandOpen);
   const openTxnSheet = useUI((s) => s.openTxnSheet);
   const navigate = useNavigate();
 
   return (
-    <header className="no-print flex h-[92px] shrink-0 items-center gap-6 border-b border-border bg-card px-7" data-tauri-drag-region>
-      <div className="min-w-0 flex-1" data-tauri-drag-region>
-        <h1 className="truncate text-[28px] leading-tight font-bold tracking-tight text-foreground">{title}</h1>
-        {subtitle && <p className="truncate text-[15px] text-muted-foreground">{subtitle}</p>}
+    <header
+      className="no-print flex h-10 shrink-0 select-none items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md"
+      data-tauri-drag-region
+    >
+      {/* Window / App Breadcrumbs */}
+      <div className="flex items-center gap-2 min-w-0" data-tauri-drag-region>
+        <span className="text-xs font-bold tracking-tight text-foreground/90">BoxERP</span>
+        <span className="text-muted-foreground/60 text-xs">/</span>
+        <span className="truncate text-xs font-medium text-muted-foreground">{title || "Factory Overview"}</span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => openTxnSheet("in")}
-          className="h-10 gap-1.5 border-emerald-300 bg-emerald-50/50 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer shadow-2xs"
-          title="Add Income (⌘+Shift+I)"
-        >
-          <ArrowDownLeft className="size-4 text-emerald-600" /> + Income
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => openTxnSheet("out")}
-          className="h-10 gap-1.5 bg-rose-600 hover:bg-rose-700 text-xs font-semibold text-white cursor-pointer shadow-xs"
-          title="Add Expense (⌘+Shift+E)"
-        >
-          <Plus className="size-4" /> + Expense
-        </Button>
-      </div>
+      <div className="flex-1" data-tauri-drag-region />
 
+      {/* Compact Native Search Bar */}
       <button
         onClick={() => setCommandOpen(true)}
-        className="flex h-11 w-[min(380px,26vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors cursor-pointer hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
+        className="flex h-7 w-52 items-center gap-2 rounded-md border border-border bg-subtle/80 px-2.5 text-left text-xs text-muted-foreground shadow-2xs transition-colors cursor-pointer hover:border-border hover:bg-muted focus-visible:outline-none"
       >
-        <Search className="size-[18px] text-[#475467]" />
-        <span className="flex-1 truncate">Search workers, materials, costing…</span>
-        <Kbd className="h-6 px-2 text-xs">{modKeyLabel} + K</Kbd>
+        <Search className="size-3 text-muted-foreground" />
+        <span className="flex-1 truncate text-[11px]">Search ERP...</span>
+        <Kbd className="h-4.5 px-1.5 text-[10px]">{modKeyLabel}K</Kbd>
       </button>
 
+      {/* Quick Action Pills */}
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => openTxnSheet("in")}
+          className="flex h-7 items-center gap-1 rounded-md border border-emerald-300/80 bg-emerald-50/70 px-2 text-[11px] font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 cursor-pointer shadow-2xs"
+          title="Add Income (⌘+Shift+I)"
+        >
+          <ArrowDownLeft className="size-3 text-emerald-600" /> Income
+        </button>
+        <button
+          onClick={() => openTxnSheet("out")}
+          className="flex h-7 items-center gap-1 rounded-md border border-rose-300/80 bg-rose-50/70 px-2 text-[11px] font-semibold text-rose-800 transition-colors hover:bg-rose-100 cursor-pointer shadow-2xs"
+          title="Add Expense (⌘+Shift+E)"
+        >
+          <Plus className="size-3 text-rose-600" /> Expense
+        </button>
+      </div>
+
+      <div className="h-4 w-px bg-border/80" />
+
+      {/* Notifications */}
       <NotificationsButton />
 
-      <div className="h-8 w-px bg-border" />
-
+      {/* Compact User Menu */}
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pr-2 pl-1 outline-none cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50">
-          <span className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-800 text-[17px] font-semibold text-white">
-            AS
+        <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md p-1 outline-none cursor-pointer hover:bg-black/5">
+          <span className="flex size-5.5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white shadow-2xs">
+            A
           </span>
-          <span className="text-[17px] font-semibold">Admin</span>
-          <ChevronDown className="size-4 text-muted-foreground" />
+          <ChevronDown className="size-3 text-muted-foreground" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-48 text-xs">
           <DropdownMenuLabel>
-            <div className="text-sm font-semibold text-foreground">Admin</div>
-            <div className="text-xs font-normal">Factory owner</div>
+            <div className="font-semibold text-foreground">Admin</div>
+            <div className="text-[11px] text-muted-foreground font-normal">Factory Workspace</div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => navigate("/settings")}>
-            <Settings /> Settings
+          <DropdownMenuItem onSelect={() => navigate("/settings")} className="cursor-pointer">
+            <Settings className="size-3.5" /> Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setCommandOpen(true)}>
-            <Keyboard /> Keyboard shortcuts
+          <DropdownMenuItem onSelect={() => setCommandOpen(true)} className="cursor-pointer">
+            <Keyboard className="size-3.5" /> Keyboard shortcuts
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
-            <LogOut /> Lock app
+          <DropdownMenuItem disabled className="text-muted-foreground">
+            <LogOut className="size-3.5" /> Lock App
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

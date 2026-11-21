@@ -12,18 +12,18 @@ export default function DashboardPage() {
   usePageMeta("Factory Dashboard", `Factory overview • ${formatDayLong(TODAY)}`);
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Tier 1: 4 Top KPI Cards */}
+    <div className="flex flex-col gap-3 select-none">
+      {/* HUD Tier 1: 4 Top KPI Cards */}
       <KpiRow />
 
-      {/* Tier 2: Cash Movement Bar Chart & Operational Alerts */}
-      <div className="grid grid-cols-12 gap-5 items-stretch">
+      {/* Workspace Tier 2: Cash Movement & Operational Alerts */}
+      <div className="grid grid-cols-12 gap-3 items-stretch">
         <CashMovementCard className="col-span-12 lg:col-span-7 xl:col-span-8" />
         <OperationalAlertsCard className="col-span-12 lg:col-span-5 xl:col-span-4" />
       </div>
 
-      {/* Tier 3: 3 Operational Hub Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+      {/* Workspace Tier 3: 3 High-Density Operational Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
         <WorkerOverviewCard />
         <InventoryOverviewCard />
         <RecentTransactionsCard />

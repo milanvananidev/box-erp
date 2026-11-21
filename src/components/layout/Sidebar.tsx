@@ -1,11 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Boxes } from "lucide-react";
 import { navGroups, settingsNav, type NavItem } from "@/lib/nav";
 import { useUI } from "@/stores/ui";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/ui/tooltip";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
-import { BrandWordmark, CorrugatedArt } from "./BrandMark";
 
 function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const Icon = item.icon;
@@ -25,15 +24,15 @@ function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
         end={item.to === "/"}
         className={({ isActive }) =>
           cn(
-            "group relative flex h-11 items-center gap-3.5 rounded-xl px-3.5 text-[15px] font-medium transition-colors outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-400/60",
+            "group relative flex h-7.5 items-center gap-2.5 rounded-md px-2 text-xs font-medium transition-colors outline-none cursor-pointer",
             collapsed && "justify-center px-0",
             isActive
-              ? "bg-gradient-to-r from-sidebar-active-from to-sidebar-active-to text-white shadow-[0_6px_16px_-6px_rgba(201,143,79,.55)]"
-              : "text-sidebar-foreground/85 hover:bg-sidebar-elevated hover:text-white",
+              ? "bg-brand-600 text-white shadow-2xs font-semibold"
+              : "text-sidebar-foreground/80 hover:bg-sidebar-elevated hover:text-white",
           )
         }
       >
-        <Icon className="size-[20px] shrink-0" strokeWidth={1.75} />
+        <Icon className="size-4 shrink-0" strokeWidth={1.8} />
         {!collapsed && <span className="truncate">{item.label}</span>}
       </NavLink>
     </Hint>
@@ -47,22 +46,42 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "no-print relative flex h-full shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-200 ease-out",
-        collapsed ? "w-[76px]" : "w-[256px]",
+        "no-print relative flex h-full shrink-0 flex-col overflow-hidden bg-sidebar select-none border-r border-sidebar-border transition-[width] duration-150 ease-out",
+        collapsed ? "w-14" : "w-52",
       )}
     >
-      <div className={cn("flex h-[92px] items-center px-5", collapsed && "justify-center px-0")} data-tauri-drag-region>
-        <BrandWordmark collapsed={collapsed} />
+      {/* Native App Sidebar Header - 40px aligned with Topbar */}
+      <div
+        className={cn(
+          "flex h-10 shrink-0 items-center border-b border-sidebar-border/60 px-3",
+          collapsed ? "justify-center px-0" : "gap-2.5",
+        )}
+        data-tauri-drag-region
+      >
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-2xs">
+          <Boxes className="size-3.5" />
+        </div>
+        {!collapsed && (
+          <div className="flex flex-col min-w-0" data-tauri-drag-region>
+            <span className="text-xs font-bold tracking-tight text-white leading-tight truncate">
+              BoxERP
+            </span>
+            <span className="text-[10px] text-sidebar-muted leading-none truncate">
+              Packaging ERP
+            </span>
+          </div>
+        )}
       </div>
 
-      <nav className={cn("relative z-10 flex flex-1 flex-col gap-1 overflow-y-auto px-3.5 pt-2", collapsed && "px-3")}>
+      {/* Nav List */}
+      <nav className={cn("relative z-10 flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pt-2", collapsed && "px-1.5")}>
         {navGroups.map((group, gi) => (
-          <div key={gi} className="flex flex-col gap-1">
+          <div key={gi} className="flex flex-col gap-0.5">
             {group.label &&
               (collapsed ? (
-                <div className="mx-auto my-2 h-px w-6 bg-sidebar-border" />
+                <div className="mx-auto my-1.5 h-px w-5 bg-sidebar-border/80" />
               ) : (
-                <div className="px-3.5 pt-4 pb-1 text-[11px] font-semibold tracking-wider text-sidebar-muted/80 uppercase">
+                <div className="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-sidebar-muted/70 uppercase">
                   {group.label}
                 </div>
               ))}
@@ -71,36 +90,35 @@ export function Sidebar() {
             ))}
           </div>
         ))}
-        <div className={cn("mt-3 border-t border-sidebar-border pt-3")}>
+        <div className={cn("mt-2 border-t border-sidebar-border/60 pt-2")}>
           <NavEntry item={settingsNav} collapsed={collapsed} />
         </div>
       </nav>
 
-      {!collapsed && <CorrugatedArt className="pointer-events-none absolute bottom-0 left-0 opacity-90" />}
-
-      <div className={cn("relative z-10 p-3.5", collapsed && "px-3")}>
-        <Hint side="right" label={`${collapsed ? "Expand" : "Collapse"} sidebar  ${modKeyLabel}B`}>
+      {/* Sidebar Footer Controls */}
+      <div className={cn("relative z-10 border-t border-sidebar-border/60 p-2", collapsed && "px-1.5")}>
+        <Hint side="right" label={`${collapsed ? "Expand" : "Collapse"} sidebar (${modKeyLabel}B)`}>
           <button
             onClick={toggle}
             className={cn(
-              "flex h-9 w-full items-center gap-3 rounded-lg px-3 text-[13px] text-sidebar-foreground/80 backdrop-blur-sm transition-colors cursor-pointer hover:bg-sidebar-elevated/80 hover:text-white",
+              "flex h-7 w-full items-center gap-2 rounded-md px-2 text-[11px] text-sidebar-foreground/70 transition-colors cursor-pointer hover:bg-sidebar-elevated hover:text-white",
               collapsed && "justify-center px-0",
-              !collapsed && "bg-sidebar/60",
             )}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <PanelLeftOpen className="size-[18px]" /> : <PanelLeftClose className="size-[18px]" />}
-            {!collapsed && "Collapse"}
+            {collapsed ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
+            {!collapsed && <span>Collapse</span>}
           </button>
         </Hint>
+
         {!collapsed && (
-          <div className="mt-3 text-center text-[11px] text-sidebar-foreground/60 leading-tight">
+          <div className="mt-1.5 px-2 text-center text-[10px] text-sidebar-foreground/40 leading-none">
             Developed by{" "}
             <a
               href="https://www.dhyeytechnologies.in/"
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-sidebar-foreground/80 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
+              className="text-sidebar-foreground/70 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
             >
               Dhyey Technologies
             </a>
