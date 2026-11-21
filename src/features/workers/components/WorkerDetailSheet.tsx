@@ -1,40 +1,28 @@
 import { useState } from "react";
-import { addMonths, format, parseISO, subMonths } from "date-fns";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, HandCoins, Pencil, Phone, UserCheck, UserX } from "lucide-react";
+import { HandCoins, Pencil, Phone, UserCheck, UserX } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/shared/states";
-import { calculateWage } from "@/lib/payroll";
 import { formatDate, formatINR } from "@/lib/format";
 import { cn, initials } from "@/lib/utils";
-import { WAGE_TYPE_LABEL, WAGE_UNIT, monthKey, monthRange, useSetWorkerActive, useWorkerHistory, useWorkerMonth, workingDays, type WorkerRow } from "../api";
-import { MonthCalendar } from "./MonthCalendar";
+import { WAGE_TYPE_LABEL, WAGE_UNIT, useSetWorkerActive, useWorkerHistory, type WorkerRow } from "../api";
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : undefined);
 
 export function WorkerDetailSheet({
   worker, onClose, onEdit, onGiveAdvance,
 }: { worker: WorkerRow | undefined; onClose: () => void; onEdit: (w: WorkerRow) => void; onGiveAdvance: (w: WorkerRow) => void }) {
-  const [month, setMonth] = useState(monthKey(new Date()));
   const [confirmLeave, setConfirmLeave] = useState(false);
-  const recs = useWorkerMonth(worker?.id, month);
   const history = useWorkerHistory(worker?.id);
   const setActive = useSetWorkerActive();
   const w = worker;
 
-  const thisMonth = monthKey(new Date());
-  const { from, to } = monthRange(month);
-  const wage = w && recs.data ? calculateWage(w, recs.data, { workingDays: workingDays(from, to), advanceOutstanding: w.advanceBalance }) : null;
-  const leave = recs.data?.filter((r) => r.status === "leave").length ?? 0;
-  const absent = recs.data?.filter((r) => r.status === "absent").length ?? 0;
-
   return (
-    <Sheet open={!!w} onOpenChange={(v) => { if (!v) { onClose(); setMonth(thisMonth); } }}>
+    <Sheet open={!!w} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent width="lg">
         {w && (
           <>
@@ -71,36 +59,7 @@ export function WorkerDetailSheet({
               <section className="grid grid-cols-3 gap-3">
                 <Tile label="Wage" value={`${formatINR(w.wageRate, { precise: w.wageType === "piece_rate" })}${WAGE_UNIT[w.wageType]}`} sub={`${WAGE_TYPE_LABEL[w.wageType]} · OT ${formatINR(w.overtimeRatePerHour)}/h`} />
                 <Tile label="Advance outstanding" value={formatINR(w.advanceBalance)} sub={w.advanceBalance ? "Deducted in next payroll" : "Nothing to recover"} tone={w.advanceBalance ? "warning" : undefined} />
-                <Tile label={month === thisMonth ? "Earned so far (est.)" : `Earned in ${format(parseISO(`${month}-01`), "MMM")}`} value={wage ? formatINR(wage.gross) : "…"} sub={wage ? `${formatINR(wage.basic)} basic + ${formatINR(wage.overtime)} OT` : undefined} />
-              </section>
-
-              <section className="rounded-xl border border-border p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="font-semibold">Attendance</h3>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon-sm" aria-label="Previous month" onClick={() => setMonth(monthKey(subMonths(parseISO(`${month}-01`), 1)))}><ChevronLeft /></Button>
-                    <span className="w-28 text-center text-sm font-medium">{format(parseISO(`${month}-01`), "MMMM yyyy")}</span>
-                    <Button variant="ghost" size="icon-sm" aria-label="Next month" disabled={month >= thisMonth} onClick={() => setMonth(monthKey(addMonths(parseISO(`${month}-01`), 1)))}><ChevronRight /></Button>
-                  </div>
-                </div>
-                {recs.error ? (
-                  <ErrorState compact error={recs.error} onRetry={() => recs.refetch()} />
-                ) : !wage ? (
-                  <Skeleton className="h-64" />
-                ) : (
-                  <div className="grid grid-cols-[1fr_200px] gap-6">
-                    <MonthCalendar month={month} records={recs.data ?? []} joinedOn={w.joinedOn} leftOn={w.leftOn} />
-                    <dl className="space-y-2 text-sm tabular">
-                      <Stat label="Present" value={wage.presentDays} />
-                      <Stat label="Half days" value={wage.halfDays} />
-                      <Stat label="Absent" value={absent} />
-                      <Stat label="Leave" value={leave} />
-                      <Stat label="Paid days" value={wage.paidDays} strong />
-                      <Stat label="Overtime" value={`${wage.overtimeHours} h`} />
-                      {w.wageType === "piece_rate" && <Stat label="Pieces" value={wage.pieces.toLocaleString("en-IN")} />}
-                    </dl>
-                  </div>
-                )}
+                <Tile label="Department" value={w.department} sub={w.designation} />
               </section>
 
               <section className="space-y-3">
@@ -129,7 +88,7 @@ export function WorkerDetailSheet({
                               <TableCell>{formatDate(h.date)}</TableCell>
                               <TableCell><Badge tone="success">Salary</Badge></TableCell>
                               <TableCell className="text-[13px] text-muted-foreground">
-                                {format(parseISO(`${h.item.period}-01`), "MMM yyyy")} · gross {formatINR(h.item.gross)}
+                                {h.item.period} · gross {formatINR(h.item.gross)}
                                 {h.item.advanceDeduction > 0 && ` − advance ${formatINR(h.item.advanceDeduction)}`} · {h.item.mode.toUpperCase()}
                               </TableCell>
                               <TableCell className="text-right font-semibold">{formatINR(h.item.net)}</TableCell>
@@ -159,11 +118,16 @@ export function WorkerDetailSheet({
               open={confirmLeave}
               onOpenChange={setConfirmLeave}
               title={`Mark ${w.name} as left?`}
-              description="They will no longer appear in daily attendance or new payroll runs. Their history is kept, and you can reactivate them later."
+              description="They will no longer appear in active roster or new payroll runs. Their history is kept, and you can reactivate them later."
               confirmLabel="Mark as left"
               onConfirm={async () => {
-                try { await setActive.mutateAsync({ id: w.id, active: false }); toast.success(`${w.name} marked as left`); }
-                catch (e) { toast.error("Couldn't update", { description: errMsg(e) }); throw e; }
+                try {
+                  await setActive.mutateAsync({ id: w.id, active: false });
+                  toast.success(`${w.name} marked as left`);
+                  setConfirmLeave(false);
+                } catch (e) {
+                  toast.error("Couldn't update status", { description: errMsg(e) });
+                }
               }}
             />
           </>
@@ -179,15 +143,6 @@ function Tile({ label, value, sub, tone }: { label: string; value: string; sub?:
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-lg font-semibold tabular">{value}</div>
       {sub && <div className="truncate text-xs text-muted-foreground">{sub}</div>}
-    </div>
-  );
-}
-
-function Stat({ label, value, strong }: { label: string; value: React.ReactNode; strong?: boolean }) {
-  return (
-    <div className={cn("flex justify-between border-b border-border/60 pb-1.5", strong && "font-semibold")}>
-      <dt className={strong ? "text-foreground" : "text-muted-foreground"}>{label}</dt>
-      <dd>{value}</dd>
     </div>
   );
 }

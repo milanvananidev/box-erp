@@ -28,7 +28,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "People",
     items: [
-      { to: "/workers", label: "Workers & HR", icon: Users, hotkey: "4", keywords: ["attendance", "employees", "staff"] },
+      { to: "/workers", label: "Workers & HR", icon: Users, hotkey: "4", keywords: ["employees", "staff", "workers", "advances"] },
       { to: "/payroll", label: "Payroll", icon: Wallet, hotkey: "5", keywords: ["salary", "wages", "advance", "slip"] },
     ],
   },

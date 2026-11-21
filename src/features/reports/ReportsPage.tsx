@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeftRight, CalendarCheck, Landmark, Receipt, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Landmark, Receipt, Wallet, type LucideIcon } from "lucide-react";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,11 +10,9 @@ import { PRESETS, resolveRange, type Preset } from "./range";
 import { ProfitReportView } from "./components/ProfitReportView";
 import { CashFlowReportView } from "./components/CashFlowReportView";
 import { LabourReportView } from "./components/LabourReportView";
-import { AttendanceReportView } from "./components/AttendanceReportView";
 import { PayrollReportView } from "./components/PayrollReportView";
-import { ProductionReportView } from "./components/ProductionReportView";
 
-type ReportId = "profit" | "cash-flow" | "labour" | "attendance" | "payroll" | "production";
+type ReportId = "profit" | "cash-flow" | "labour" | "payroll";
 
 const REPORTS: { group: string; items: { id: ReportId; label: string; hint: string; icon: LucideIcon }[] }[] = [
   {
@@ -28,7 +26,6 @@ const REPORTS: { group: string; items: { id: ReportId; label: string; hint: stri
     group: "People",
     items: [
       { id: "labour", label: "Labour Cost", hint: "By month and department", icon: Receipt },
-      { id: "attendance", label: "Attendance Summary", hint: "By worker and department", icon: CalendarCheck },
       { id: "payroll", label: "Payroll Register", hint: "Gross, deductions, paid", icon: Wallet },
     ],
   },
@@ -55,7 +52,7 @@ export default function ReportsPage() {
 
   const range = useMemo(() => resolveRange(preset, from, to), [preset, from, to]);
 
-  const View = { profit: ProfitReportView, "cash-flow": CashFlowReportView, labour: LabourReportView, attendance: AttendanceReportView, payroll: PayrollReportView, production: ProductionReportView }[report];
+  const View = ({ profit: ProfitReportView, "cash-flow": CashFlowReportView, labour: LabourReportView, payroll: PayrollReportView } as Record<string, typeof ProfitReportView>)[report] ?? ProfitReportView;
 
   return (
     <div className="grid grid-cols-[232px_1fr] items-start gap-5">

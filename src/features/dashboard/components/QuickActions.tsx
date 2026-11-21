@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { SquarePlus, Calculator, UserCheck, ReceiptIndianRupee, PackagePlus, FileText } from "lucide-react";
+import { SquarePlus, Calculator, HandCoins, ReceiptIndianRupee, PackagePlus, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Hint } from "@/components/ui/tooltip";
@@ -22,7 +22,7 @@ export function QuickActions({ className }: { className?: string }) {
     { label: "Add Income", icon: SquarePlus, onClick: () => openTxn("in"), shortcut: `${modKeyLabel}⇧I` },
     { label: "Add Expense", icon: ReceiptIndianRupee, onClick: () => openTxn("out"), shortcut: `${modKeyLabel}⇧E` },
     { label: "Box Costing", icon: Calculator, onClick: () => navigate("/costing") },
-    { label: "Mark Attendance", icon: UserCheck, onClick: () => navigate("/workers") },
+    { label: "Worker Advances", icon: HandCoins, onClick: () => navigate("/workers?tab=advances") },
     { label: "Material Inward", icon: PackagePlus, onClick: () => navigate("/inventory?inward=1") },
     { label: "Reports", icon: FileText, onClick: () => navigate("/reports") },
   ];
@@ -32,7 +32,7 @@ export function QuickActions({ className }: { className?: string }) {
       <CardHeader>
         <CardTitle>Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent className="grid flex-1 grid-cols-3 gap-3 lg:grid-cols-6 2xl:grid-cols-3">
+      <CardContent className="grid flex-1 grid-cols-2 sm:grid-cols-3 gap-3">
         {actions.map(({ label, icon: Icon, onClick, shortcut }) => (
           <Hint key={label} label={shortcut ?? label}>
             <button

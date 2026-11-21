@@ -1,14 +1,13 @@
 import { ArrowDownToLine, ArrowUpRight, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/shared/StatCard";
-import { formatINR, formatPercent } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { useDashboardSummary } from "../api";
 
 export function KpiRow() {
   const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
   const att = data?.attendance;
-  const present = att ? att.present + att.halfDay : 0;
 
   return (
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -43,12 +42,12 @@ export function KpiRow() {
         onClick={() => navigate("/reports")}
       />
       <StatCard
-        label="Workers Present"
+        label="Active Workers"
         icon={Users}
         tone="violet"
         loading={isLoading}
-        value={att && `${present} / ${att.total}`}
-        footnote={att && `${formatPercent((present / Math.max(att.total, 1)) * 100)} attendance`}
+        value={att && `${att.total} staff`}
+        footnote="Active on payroll"
         onClick={() => navigate("/workers")}
       />
     </div>
