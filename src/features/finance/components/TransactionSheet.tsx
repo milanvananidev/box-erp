@@ -90,16 +90,81 @@ export function TransactionSheet() {
                   key={d}
                   onClick={() => { setValue("direction", d); setValue("category", ""); setValue("partyId", undefined); }}
                   className={cn(
-                    "flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors cursor-pointer",
                     dir === d
-                      ? d === "in" ? "bg-card text-success-foreground shadow-sm" : "bg-card text-danger-foreground shadow-sm"
+                      ? d === "in" ? "bg-card text-success-foreground shadow-sm font-bold" : "bg-card text-danger-foreground shadow-sm font-bold"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {d === "in" ? <ArrowDownLeft className="size-4" /> : <ArrowUpRight className="size-4" />}
-                  {d === "in" ? "Income (Cash In)" : "Expense (Cash Out)"}
+                  {d === "in" ? "+ Income (Cash In)" : "− Expense (Cash Out)"}
                 </button>
               ))}
+            </div>
+
+            {/* Quick Box Factory Presets */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-subtle/80 border border-border/70">
+              <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Box Factory Presets
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {dir === "in" ? (
+                  <>
+                    {[
+                      { label: "Client Payment", cat: "Sales Receipt", note: "Client payment for corrugated boxes" },
+                      { label: "Scrap Paper Sold", cat: "Scrap Sale", note: "Corrugation waste / kraft scrap paper sold to mill" },
+                      { label: "Loan / Capital", cat: "Loan Received", note: "Partner credit / loan received" },
+                    ].map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => {
+                          setValue("category", p.cat);
+                          if (!form.getValues("particulars")) setValue("particulars", p.note);
+                        }}
+                        className={cn(
+                          "rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer",
+                          form.watch("category") === p.cat
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-2xs"
+                            : "border-border text-muted-foreground hover:bg-card hover:text-foreground",
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {[
+                      { label: "Kraft Paper Reel", cat: "Raw Material", note: "Paper reel purchase from mill" },
+                      { label: "Gum & Consumables", cat: "Raw Material", note: "Starch gum / ink / stitching wire" },
+                      { label: "Electricity Bill", cat: "Electricity", note: "Factory electricity power bill" },
+                      { label: "Transport & Freight", cat: "Transport & Freight", note: "Tempo / truck freight for box delivery" },
+                      { label: "Machine Repairs", cat: "Repairs & Maintenance", note: "Corrugator parts / machine repairs" },
+                      { label: "Factory Rent", cat: "Rent", note: "Godown / factory shed rent" },
+                      { label: "Wages & Labour", cat: "Wages & Salary", note: "Worker wages payout" },
+                      { label: "Tea & Misc", cat: "Miscellaneous", note: "Staff tea & refreshment expenses" },
+                    ].map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => {
+                          setValue("category", p.cat);
+                          if (!form.getValues("particulars")) setValue("particulars", p.note);
+                        }}
+                        className={cn(
+                          "rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer",
+                          form.watch("category") === p.cat
+                            ? "bg-amber-50 text-amber-900 border-amber-300 font-bold shadow-2xs"
+                            : "border-border text-muted-foreground hover:bg-card hover:text-foreground",
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

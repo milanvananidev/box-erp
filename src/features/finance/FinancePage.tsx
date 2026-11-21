@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { endOfMonth, format, startOfMonth, subDays, subMonths } from "date-fns";
 import { downloadXlsx } from "@/lib/xlsx";
-import { Download, MoreHorizontal, Plus, Trash2, FileInput } from "lucide-react";
+import { Download, MoreHorizontal, Trash2, FileInput, FileSpreadsheet, ArrowDownLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { DataTable, type DataColumn } from "@/components/shared/DataTable";
@@ -11,11 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Hint } from "@/components/ui/tooltip";
 import { StatCard } from "@/components/shared/StatCard";
 import { ArrowDownToLine, ArrowUpRight, Scale } from "lucide-react";
 import { formatDate, formatINR } from "@/lib/format";
-import { modKeyLabel } from "@/hooks/use-hotkeys";
 import { useUI } from "@/stores/ui";
 import { cn } from "@/lib/utils";
 import type { Direction, PaymentMode, Transaction } from "@/types/domain";
@@ -72,6 +70,7 @@ async function exportTransactions(rows: Transaction[]) {
 export default function FinancePage() {
   usePageMeta("Income & Expenses", "Cash, bank and UPI movements");
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const direction = (params.get("direction") as Direction | null) ?? "all";
   const [period, setPeriod] = useState<Period>("this_month");
   const [mode, setMode] = useState<PaymentMode | "all">("all");
@@ -218,17 +217,45 @@ export default function FinancePage() {
         }
         actions={
           <>
-            <Button variant="outline" onClick={() => setShowVyaparImport(true)}>
-              <FileInput /> Import Vyapar
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-brand-800 bg-brand-50/60 border-brand-200 hover:bg-brand-100 font-semibold text-xs h-9 px-3"
+              onClick={() => navigate("/reports?report=monthly")}
+            >
+              <FileSpreadsheet className="size-3.5" /> Monthly Statement
             </Button>
-            <Button variant="outline" onClick={() => filtered && exportTransactions(filtered)} disabled={!filtered?.length}>
-              <Download /> Export
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowVyaparImport(true)}
+              className="text-xs h-9 px-3 font-medium"
+            >
+              <FileInput className="size-3.5" /> Import Vyapar
             </Button>
-            <Hint label={`${modKeyLabel}⇧E`}>
-              <Button onClick={() => openTxn(direction === "in" ? "in" : "out")}>
-                <Plus /> Add transaction
-              </Button>
-            </Hint>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => filtered && exportTransactions(filtered)}
+              disabled={!filtered?.length}
+              className="text-xs h-9 px-3 font-medium"
+            >
+              <Download className="size-3.5" /> Export
+            </Button>
+            <Button
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 px-3.5 shadow-xs"
+              onClick={() => openTxn("in")}
+            >
+              <ArrowDownLeft className="size-3.5" /> + Add Income
+            </Button>
+            <Button
+              size="sm"
+              className="bg-[#C98F4F] hover:bg-[#B37A3B] text-white font-semibold text-xs h-9 px-3.5 shadow-xs"
+              onClick={() => openTxn("out")}
+            >
+              <ArrowUpRight className="size-3.5" /> − Add Expense
+            </Button>
           </>
         }
         empty={{
