@@ -7,4 +7,5 @@ src-tauri/gen/schemas
 !.env.example
 .DS_Store
 *.log
+*.tsbuildinfo
 .claude/settings.local.json
