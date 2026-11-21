@@ -71,14 +71,14 @@
   --chart-brand: var(--brand-500);
   --chart-track: #efe7dc;
 
-  /* Sidebar */
-  --sidebar: #1e2331;
-  --sidebar-elevated: #272d3d;
-  --sidebar-foreground: #e6e8ee;
-  --sidebar-muted: #8e96a8;
-  --sidebar-border: #2e3446;
-  --sidebar-active-from: #c98f4f;
-  --sidebar-active-to: #9a6432;
+  /* Sidebar - Native Desktop Slate */
+  --sidebar: #f0f2f5;
+  --sidebar-elevated: #e4e7ed;
+  --sidebar-foreground: #0f172a;
+  --sidebar-muted: #64748b;
+  --sidebar-border: #e2e5ea;
+  --sidebar-active-from: #a96a2f;
+  --sidebar-active-to: #8a5426;
 }
 
 @theme inline {

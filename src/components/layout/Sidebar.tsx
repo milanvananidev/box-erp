@@ -5,6 +5,7 @@ import { useUI } from "@/stores/ui";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/ui/tooltip";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
+import { isMac, isTauri } from "@/lib/env";
 
 function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const Icon = item.icon;
@@ -15,7 +16,7 @@ function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       label={
         <span className="flex items-center gap-2">
           {item.label}
-          {item.hotkey && <span className="text-white/50">{modKeyLabel}{item.hotkey}</span>}
+          {item.hotkey && <span className="text-muted-foreground">{modKeyLabel}{item.hotkey}</span>}
         </span>
       }
     >
@@ -24,15 +25,15 @@ function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
         end={item.to === "/"}
         className={({ isActive }) =>
           cn(
-            "group relative flex h-7.5 items-center gap-2.5 rounded-md px-2 text-xs font-medium transition-colors outline-none cursor-pointer",
-            collapsed && "justify-center px-0",
+            "group relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-xs font-medium transition-all outline-none cursor-pointer",
+            collapsed && "justify-center px-0 h-8.5",
             isActive
-              ? "bg-brand-600 text-white shadow-2xs font-semibold"
-              : "text-sidebar-foreground/80 hover:bg-sidebar-elevated hover:text-white",
+              ? "bg-white text-brand-900 shadow-2xs border border-border/70 font-semibold"
+              : "text-muted-foreground hover:bg-black/[0.04] hover:text-foreground",
           )
         }
       >
-        <Icon className="size-4 shrink-0" strokeWidth={1.8} />
+        <Icon className="size-4 shrink-0 transition-colors" strokeWidth={1.9} />
         {!collapsed && <span className="truncate">{item.label}</span>}
       </NavLink>
     </Hint>
@@ -42,6 +43,7 @@ function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
 export function Sidebar() {
   const collapsed = useUI((s) => s.sidebarCollapsed);
   const toggle = useUI((s) => s.toggleSidebar);
+  const hasMacTrafficLights = isMac && isTauri();
 
   return (
     <aside
@@ -50,24 +52,25 @@ export function Sidebar() {
         collapsed ? "w-14" : "w-52",
       )}
     >
-      {/* Native App Sidebar Header - 40px aligned with Topbar */}
+      {/* Native App Sidebar Header - 40px aligned with Topbar, with Mac traffic light avoidance */}
       <div
         className={cn(
-          "flex h-10 shrink-0 items-center border-b border-sidebar-border/60 px-3",
-          collapsed ? "justify-center px-0" : "gap-2.5",
+          "flex h-10 shrink-0 items-center border-b border-sidebar-border px-3",
+          hasMacTrafficLights && (collapsed ? "pt-2 justify-center" : "pl-18 gap-2"),
+          !hasMacTrafficLights && (collapsed ? "justify-center px-0" : "gap-2.5"),
         )}
         data-tauri-drag-region
       >
-        <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-2xs">
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-2xs">
           <Boxes className="size-3.5" />
         </div>
         {!collapsed && (
           <div className="flex flex-col min-w-0" data-tauri-drag-region>
-            <span className="text-xs font-bold tracking-tight text-white leading-tight truncate">
+            <span className="text-xs font-bold tracking-tight text-foreground leading-tight truncate">
               BoxERP
             </span>
-            <span className="text-[10px] text-sidebar-muted leading-none truncate">
-              Packaging ERP
+            <span className="text-[10px] text-muted-foreground leading-none truncate">
+              Packaging Workspace
             </span>
           </div>
         )}
@@ -79,9 +82,9 @@ export function Sidebar() {
           <div key={gi} className="flex flex-col gap-0.5">
             {group.label &&
               (collapsed ? (
-                <div className="mx-auto my-1.5 h-px w-5 bg-sidebar-border/80" />
+                <div className="mx-auto my-1.5 h-px w-5 bg-sidebar-border" />
               ) : (
-                <div className="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-sidebar-muted/70 uppercase">
+                <div className="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                   {group.label}
                 </div>
               ))}
@@ -90,40 +93,26 @@ export function Sidebar() {
             ))}
           </div>
         ))}
-        <div className={cn("mt-2 border-t border-sidebar-border/60 pt-2")}>
+        <div className={cn("mt-auto border-t border-sidebar-border pt-2")}>
           <NavEntry item={settingsNav} collapsed={collapsed} />
         </div>
       </nav>
 
       {/* Sidebar Footer Controls */}
-      <div className={cn("relative z-10 border-t border-sidebar-border/60 p-2", collapsed && "px-1.5")}>
+      <div className={cn("relative z-10 border-t border-sidebar-border p-2", collapsed && "px-1.5")}>
         <Hint side="right" label={`${collapsed ? "Expand" : "Collapse"} sidebar (${modKeyLabel}B)`}>
           <button
             onClick={toggle}
             className={cn(
-              "flex h-7 w-full items-center gap-2 rounded-md px-2 text-[11px] text-sidebar-foreground/70 transition-colors cursor-pointer hover:bg-sidebar-elevated hover:text-white",
+              "flex h-7 w-full items-center gap-2 rounded-md px-2 text-[11px] text-muted-foreground transition-colors cursor-pointer hover:bg-black/[0.04] hover:text-foreground",
               collapsed && "justify-center px-0",
             )}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
-            {!collapsed && <span>Collapse</span>}
+            {!collapsed && <span>Collapse Sidebar</span>}
           </button>
         </Hint>
-
-        {!collapsed && (
-          <div className="mt-1.5 px-2 text-center text-[10px] text-sidebar-foreground/40 leading-none">
-            Developed by{" "}
-            <a
-              href="https://www.dhyeytechnologies.in/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sidebar-foreground/70 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
-            >
-              Dhyey Technologies
-            </a>
-          </div>
-        )}
       </div>
     </aside>
   );
