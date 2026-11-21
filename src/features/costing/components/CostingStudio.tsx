@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField } from "@/components/shared/FormField";
 import { useParties } from "@/features/finance/api";
@@ -829,12 +830,10 @@ For any queries, please call: ${company.phone}`;
                                 />
                               </td>
                               <td className="p-2">
-                                <Input
-                                  type="number"
-                                  step="0.5"
+                                <CurrencyInput
                                   className="h-7 text-xs px-2 font-mono"
                                   value={layer.rate}
-                                  onChange={(e) => updateLayer(idx, { rate: parseFloat(e.target.value) || 0 })}
+                                  onChange={(val) => updateLayer(idx, { rate: val ?? 0 })}
                                 />
                               </td>
                               <td className="p-2 text-right font-mono font-medium">
@@ -858,34 +857,27 @@ For any queries, please call: ${company.phone}`;
                 </CardHeader>
                 <CardContent className="pt-4 grid gap-3 sm:grid-cols-3">
                   <FormField label="Conversion Rate (₹/kg)">
-                    <Input
-                      type="number"
-                      step="0.5"
+                    <CurrencyInput
                       value={input.conversionRate}
-                      onChange={(e) => setInput({ ...input, conversionRate: parseFloat(e.target.value) || 0 })}
+                      onChange={(val) => setInput({ ...input, conversionRate: val ?? 0 })}
                     />
                   </FormField>
                   <FormField label="Printing Rate (₹/box)">
-                    <Input
-                      type="number"
-                      step="0.1"
+                    <CurrencyInput
                       value={input.printingRate}
-                      onChange={(e) => setInput({ ...input, printingRate: parseFloat(e.target.value) || 0 })}
+                      onChange={(val) => setInput({ ...input, printingRate: val ?? 0 })}
                     />
                   </FormField>
                   <FormField label="Transport (₹/box)">
-                    <Input
-                      type="number"
-                      step="0.1"
+                    <CurrencyInput
                       value={input.transportPerBox}
-                      onChange={(e) => setInput({ ...input, transportPerBox: parseFloat(e.target.value) || 0 })}
+                      onChange={(val) => setInput({ ...input, transportPerBox: val ?? 0 })}
                     />
                   </FormField>
                   <FormField label="Stereo / Setup Cost (₹ total)">
-                    <Input
-                      type="number"
+                    <CurrencyInput
                       value={input.setupCost}
-                      onChange={(e) => setInput({ ...input, setupCost: parseFloat(e.target.value) || 0 })}
+                      onChange={(val) => setInput({ ...input, setupCost: val ?? 0 })}
                     />
                   </FormField>
                   <FormField label="Order Qty (Pcs)">

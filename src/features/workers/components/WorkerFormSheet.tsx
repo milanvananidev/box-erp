@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Kbd } from "@/components/ui/kbd";
 import { FormField } from "@/components/shared/FormField";
@@ -72,8 +73,6 @@ export function WorkerFormSheet({ open, worker, onClose, onSaved }: { open: bool
     }
   });
   useHotkeys({ "mod+enter": () => void onSubmit() }, open);
-
-  const num = (n: "wageRate" | "overtimeRate") => register(n, { setValueAs: (x: string) => (x === "" ? undefined : Number(x)) });
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -142,10 +141,34 @@ export function WorkerFormSheet({ open, worker, onClose, onSaved }: { open: bool
                   label={`Rate (₹${WAGE_UNIT[wageType]})`} htmlFor="wk-rate" error={errors.wageRate?.message} required
                   hint={wageType === "monthly" ? "Full monthly salary" : wageType === "piece_rate" ? "Rate per piece" : "Rate per day"}
                 >
-                  <Input id="wk-rate" type="number" step="0.01" min="0" className="font-semibold" aria-invalid={!!errors.wageRate} {...num("wageRate")} />
+                  <Controller
+                    control={control}
+                    name="wageRate"
+                    render={({ field }) => (
+                      <CurrencyInput
+                        id="wk-rate"
+                        placeholder="0"
+                        value={field.value}
+                        onChange={field.onChange}
+                        aria-invalid={!!errors.wageRate}
+                      />
+                    )}
+                  />
                 </FormField>
                 <FormField label="Overtime (₹/hour)" htmlFor="wk-ot" error={errors.overtimeRate?.message} required>
-                  <Input id="wk-ot" type="number" step="1" min="0" aria-invalid={!!errors.overtimeRate} {...num("overtimeRate")} />
+                  <Controller
+                    control={control}
+                    name="overtimeRate"
+                    render={({ field }) => (
+                      <CurrencyInput
+                        id="wk-ot"
+                        placeholder="0"
+                        value={field.value}
+                        onChange={field.onChange}
+                        aria-invalid={!!errors.overtimeRate}
+                      />
+                    )}
+                  />
                 </FormField>
               </div>
               <FormField label="Notes" htmlFor="wk-notes">

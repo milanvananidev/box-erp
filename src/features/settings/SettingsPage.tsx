@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Kbd } from "@/components/ui/kbd";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormField } from "@/components/shared/FormField";
@@ -201,22 +202,20 @@ function CompanySettingsView() {
         <CardContent className="pt-5 space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <FormField label="Opening Cash in Hand (₹)" htmlFor="comp-open-cash">
-              <Input
+              <CurrencyInput
                 id="comp-open-cash"
-                type="number"
-                step="any"
+                placeholder="0"
                 value={openingCash}
-                onChange={(e) => setOpeningCash(Number(e.target.value))}
+                onChange={(val) => setOpeningCash(val || 0)}
                 className="font-mono text-base"
               />
             </FormField>
             <FormField label="Opening Bank Balance (₹)" htmlFor="comp-open-bank">
-              <Input
+              <CurrencyInput
                 id="comp-open-bank"
-                type="number"
-                step="any"
+                placeholder="0"
                 value={openingBank}
-                onChange={(e) => setOpeningBank(Number(e.target.value))}
+                onChange={(val) => setOpeningBank(val || 0)}
                 className="font-mono text-base"
               />
             </FormField>

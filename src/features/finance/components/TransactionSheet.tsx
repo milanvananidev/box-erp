@@ -8,6 +8,7 @@ import { AlertTriangle, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Kbd } from "@/components/ui/kbd";
 import { FormField } from "@/components/shared/FormField";
@@ -169,8 +170,21 @@ export function TransactionSheet() {
 
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Amount (₹)" htmlFor="txn-amount" error={errors.amount?.message} required>
-                <Input id="txn-amount" type="number" inputMode="decimal" step="0.01" min="0" placeholder="0" aria-invalid={!!errors.amount}
-                  className="text-base font-semibold" {...register("amount", { valueAsNumber: true })} />
+                <Controller
+                  control={control}
+                  name="amount"
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="txn-amount"
+                      autoFocus
+                      placeholder="0.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      aria-invalid={!!errors.amount}
+                      className="text-base"
+                    />
+                  )}
+                />
               </FormField>
               <FormField label="Date" htmlFor="txn-date" error={errors.date?.message} required>
                 <Input id="txn-date" type="date" aria-invalid={!!errors.date} max={format(new Date(), "yyyy-MM-dd")} {...register("date")} />

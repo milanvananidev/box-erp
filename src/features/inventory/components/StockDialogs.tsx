@@ -5,6 +5,7 @@ import { ArrowDownToLine, ArrowUpFromLine, Scale } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField } from "@/components/shared/FormField";
 import { useHotkeys } from "@/hooks/use-hotkeys";
@@ -208,14 +209,11 @@ export function InwardDialog({
             </FormField>
 
             <FormField label={`Purchase Rate (₹/${m?.unit ?? "unit"})`} htmlFor="in-rate" required>
-              <Input
+              <CurrencyInput
                 id="in-rate"
-                type="number"
-                min="0"
-                step="any"
                 placeholder="0.00"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
+                value={rate ? Number(rate) : undefined}
+                onChange={(val) => setRate(val !== undefined ? String(val) : "")}
                 className="font-mono text-base"
               />
             </FormField>

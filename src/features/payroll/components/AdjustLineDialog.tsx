@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { FormField } from "@/components/shared/FormField";
 import { formatINR, fromPaise, toPaise } from "@/lib/format";
 import type { PayrollLine } from "@/types/domain";
@@ -55,10 +56,20 @@ export function AdjustLineDialog({ period, line, onOpenChange }: { period: strin
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Bonus / incentive (₹)" htmlFor="adj-bonus">
-            <Input id="adj-bonus" type="number" min="0" value={bonus} onChange={(e) => setBonus(e.target.value)} placeholder="0" />
+            <CurrencyInput
+              id="adj-bonus"
+              value={bonus ? Number(bonus) : undefined}
+              onChange={(val) => setBonus(val !== undefined ? String(val) : "")}
+              placeholder="0"
+            />
           </FormField>
           <FormField label="Other deduction (₹)" htmlFor="adj-other" hint="Canteen, damage, loan EMI…">
-            <Input id="adj-other" type="number" min="0" value={other} onChange={(e) => setOther(e.target.value)} placeholder="0" />
+            <CurrencyInput
+              id="adj-other"
+              value={other ? Number(other) : undefined}
+              onChange={(val) => setOther(val !== undefined ? String(val) : "")}
+              placeholder="0"
+            />
           </FormField>
           {o > 0 && (
             <FormField label="Deduction reason" htmlFor="adj-note" required className="col-span-2" error={!note.trim() ? "Required when deducting" : undefined}>
@@ -70,7 +81,13 @@ export function AdjustLineDialog({ period, line, onOpenChange }: { period: strin
             hint={line.advanceOutstanding ? `Outstanding ${formatINR(line.advanceOutstanding)} · max this month ${formatINR(maxAdv)}. Anything not recovered carries forward.` : "No advance outstanding"}
           >
             <div className="flex gap-2">
-              <Input id="adj-adv" type="number" min="0" disabled={!line.advanceOutstanding} value={advance} onChange={(e) => setAdvance(e.target.value)} className="max-w-40" />
+              <CurrencyInput
+                id="adj-adv"
+                disabled={!line.advanceOutstanding}
+                value={advance ? Number(advance) : undefined}
+                onChange={(val) => setAdvance(val !== undefined ? String(val) : "")}
+                className="max-w-44"
+              />
               <Button type="button" variant="outline" size="sm" className="h-9" disabled={!line.advanceOutstanding} onClick={() => setAdvance(String(fromPaise(maxAdv)))}>Recover max</Button>
               <Button type="button" variant="outline" size="sm" className="h-9" disabled={!line.advanceOutstanding} onClick={() => setAdvance("0")}>Skip this month</Button>
             </div>

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField } from "@/components/shared/FormField";
 import { formatINR, toPaise } from "@/lib/format";
@@ -69,8 +70,21 @@ export function AdvanceDialog({ open, onOpenChange, workerId }: { open: boolean;
           )}
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Amount (₹)" htmlFor="adv-amt" error={errors.amount?.message} required>
-              <Input id="adv-amt" type="number" min="0" step="1" autoFocus className="font-semibold" aria-invalid={!!errors.amount}
-                {...register("amount", { setValueAs: (x: string) => (x === "" ? undefined : Number(x)) })} />
+              <Controller
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="adv-amt"
+                    autoFocus
+                    placeholder="0"
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.amount}
+                    className="font-semibold"
+                  />
+                )}
+              />
             </FormField>
             <FormField label="Date" htmlFor="adv-date" required>
               <Input id="adv-date" type="date" max={today} {...register("date")} />

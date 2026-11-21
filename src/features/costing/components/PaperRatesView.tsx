@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, RotateCcw, Search, TrendingUp, Layers } from "lucid
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { StatCard } from "@/components/shared/StatCard";
 import { formatRupees } from "@/lib/format";
 import {
@@ -183,11 +184,9 @@ export function PaperRatesView() {
                       />
                     </td>
                     <td className="py-2 px-4">
-                      <Input
-                        type="number"
-                        step="0.5"
+                      <CurrencyInput
                         value={item.ratePerKg}
-                        onChange={(e) => handleUpdate(item.id, { ratePerKg: parseFloat(e.target.value) || 0 })}
+                        onChange={(val) => handleUpdate(item.id, { ratePerKg: val ?? 0 })}
                         className="h-8 text-xs font-mono font-bold text-brand-700"
                       />
                     </td>
