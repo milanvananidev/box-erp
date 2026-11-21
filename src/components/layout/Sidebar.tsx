@@ -93,19 +93,6 @@ export function Sidebar() {
             {!collapsed && "Collapse"}
           </button>
         </Hint>
-        {!collapsed && (
-          <div className="mt-3 text-center text-[11px] text-sidebar-foreground/60 leading-tight">
-            Developed by{" "}
-            <a
-              href="https://www.dhyeytechnologies.in/"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-sidebar-foreground/80 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
-            >
-              Dhyey Technologies
-            </a>
-          </div>
-        )}
       </div>
     </aside>
   );
