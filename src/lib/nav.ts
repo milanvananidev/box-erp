@@ -17,24 +17,13 @@ export interface NavGroup {
 }
 
 export const navGroups: NavGroup[] = [
-  { items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard, hotkey: "1", keywords: ["home", "overview"] }] },
   {
-    label: "Operations",
     items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard, hotkey: "1", keywords: ["home", "overview"] },
       { to: "/costing", label: "Box Costing", icon: Calculator, hotkey: "2", keywords: ["cost", "calculator", "quotation", "rate", "ply"] },
       { to: "/inventory", label: "Inventory", icon: Boxes, hotkey: "3", keywords: ["raw materials", "paper", "stock", "gum", "ink"] },
-    ],
-  },
-  {
-    label: "People",
-    items: [
       { to: "/workers", label: "Workers & HR", icon: Users, hotkey: "4", keywords: ["employees", "staff", "workers", "advances"] },
       { to: "/payroll", label: "Payroll", icon: Wallet, hotkey: "5", keywords: ["salary", "wages", "advance", "slip"] },
-    ],
-  },
-  {
-    label: "Finance",
-    items: [
       { to: "/finance", label: "Income & Expenses", icon: ArrowLeftRight, hotkey: "6", keywords: ["transactions", "ledger", "cash", "bank", "upi"] },
       { to: "/reports", label: "Reports", icon: BarChart3, hotkey: "7", keywords: ["cash flow", "summary", "export"] },
     ],
