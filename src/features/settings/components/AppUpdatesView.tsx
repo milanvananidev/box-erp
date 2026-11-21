@@ -257,9 +257,19 @@ export function AppUpdatesView({
             </div>
           )}
 
-          {/* GitHub Repo Link Footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-border text-xs text-muted-foreground">
-            <span>Repository: {REPO_OWNER}/{REPO_NAME}</span>
+          {/* Footer Info */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border text-xs text-muted-foreground">
+            <span>
+              Developed by{" "}
+              <a
+                href="https://www.dhyeytechnologies.in/"
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors cursor-pointer"
+              >
+                Dhyey Technologies
+              </a>
+            </span>
             <a
               href={GITHUB_RELEASES_URL}
               target="_blank"

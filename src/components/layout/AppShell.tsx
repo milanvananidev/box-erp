@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import { dataSource } from "@/lib/env";
 import { useDbStatus } from "@/features/settings/api";
 import { Sidebar } from "./Sidebar";
@@ -49,14 +50,25 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
         <DbBanner />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1680px] px-5 py-5 xl:px-6">
+        <main className="flex-1 overflow-y-auto flex flex-col justify-between">
+          <div className="mx-auto w-full max-w-[1680px] px-5 py-5 xl:px-6 flex-1">
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
           </div>
+          <footer className="no-print mt-auto border-t border-border/60 bg-card/50 px-7 py-3 text-center text-xs text-muted-foreground backdrop-blur-xs">
+            <span>BoxERP · Corrugated Box Packaging ERP · Developed by </span>
+            <a
+              href="https://www.dhyeytechnologies.in/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors cursor-pointer inline-flex items-center gap-1"
+            >
+              Dhyey Technologies <ExternalLink className="size-3 inline" />
+            </a>
+          </footer>
         </main>
       </div>
       <CommandPalette />
