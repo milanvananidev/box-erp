@@ -1,129 +1,41 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Database, DatabaseZap, Factory, KeyRound, Monitor, ShieldCheck, Unplug } from "lucide-react";
+import {
+  Building2,
+  Database,
+  Keyboard,
+  Save,
+  ShieldCheck,
+  Unplug,
+  Phone,
+  MapPin,
+  Receipt,
+  Calendar,
+  Wallet,
+  Monitor,
+  RefreshCw,
+} from "lucide-react";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormField } from "@/components/shared/FormField";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
-import { isTauri, dataSource } from "@/lib/env";
-import { useCompanySettings, useConfigureDb, useDbStatus, useForgetDb, useImportDemo, useUpdateCompanySettings } from "./api";
-import { LIVE_MODULES, MOCK_MODULES } from "@/lib/live-commands";
+import { isTauri } from "@/lib/env";
+import {
+  useCompanySettings,
+  useConfigureDb,
+  useDbStatus,
+  useForgetDb,
+  useUpdateCompanySettings,
+} from "./api";
 
-function DatabaseCard() {
-  const status = useDbStatus();
-  const configure = useConfigureDb();
-  const forget = useForgetDb();
-  const [uri, setUri] = useState("");
-  const [database, setDatabase] = useState("boxerp");
-  const [confirmForget, setConfirmForget] = useState(false);
-  const desktop = isTauri();
-  const s = status.data;
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await configure.mutateAsync({ uri: uri.trim(), database: database.trim() });
-      setUri("");
-      toast.success("Connected", { description: `${res.host} / ${res.database}` });
-    } catch (err) {
-      toast.error("Connection failed", { description: err instanceof Error ? err.message : undefined });
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader className="border-b border-border pb-4">
-        <div className="flex gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><Database className="size-5" /></span>
-          <div>
-            <CardTitle>Database connection</CardTitle>
-            <CardDescription>MongoDB is accessed only from the desktop app's Rust layer — never from the UI.</CardDescription>
-          </div>
-        </div>
-        {desktop && (status.isLoading ? <Skeleton className="h-6 w-24" /> : s?.connected ? <Badge tone="success" size="md" dot>Connected</Badge> : s?.configured ? <Badge tone="danger" size="md" dot>Unreachable</Badge> : <Badge tone="neutral" size="md" dot>Not configured</Badge>)}
-      </CardHeader>
-      <CardContent className="pt-5">
-        {!desktop ? (
-          <div className="flex gap-3 rounded-xl bg-info-soft p-4 text-sm text-info-foreground">
-            <Monitor className="mt-0.5 size-4 shrink-0" />
-            <p>You're viewing the browser preview with mock data. Open the desktop app (<code className="font-mono text-xs">pnpm tauri dev</code>) to configure the database.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            <form onSubmit={submit} className="space-y-4">
-              {s?.configured && (
-                <div className="grid grid-cols-3 gap-3 rounded-xl border border-border bg-subtle p-4 text-sm">
-                  <div><div className="text-xs text-muted-foreground">Host</div><div className="truncate font-medium">{s.host}</div></div>
-                  <div><div className="text-xs text-muted-foreground">Database</div><div className="font-medium">{s.database}</div></div>
-                  <div><div className="text-xs text-muted-foreground">Stored in</div><div className="font-medium">{s.source === "env" ? "Environment variable" : "OS keychain"}</div></div>
-                  {s.error && <p className="col-span-3 text-xs text-danger-foreground">{s.error}</p>}
-                </div>
-              )}
-              <FormField label="Connection string" htmlFor="db-uri" required hint="mongodb+srv://<user>:<password>@cluster.example.net — use this computer's own database user">
-                <Input id="db-uri" type="password" autoComplete="off" spellCheck={false} value={uri} onChange={(e) => setUri(e.target.value)}
-                  placeholder={s?.configured ? "•••••••• (saved — enter a new one to replace)" : "mongodb+srv://…"} />
-              </FormField>
-              <FormField label="Database name" htmlFor="db-name" required>
-                <Input id="db-name" value={database} onChange={(e) => setDatabase(e.target.value)} className="max-w-xs" />
-              </FormField>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" loading={configure.isPending} disabled={!uri.trim() || !database.trim()}>Test & save</Button>
-                {import.meta.env.DEV && s?.connected && <DemoImportButton />}
-                {s?.configured && s.source !== "env" && (
-                  <Button type="button" variant="outline" onClick={() => setConfirmForget(true)}><Unplug /> Disconnect</Button>
-                )}
-              </div>
-            </form>
-            <aside className="space-y-3 rounded-xl bg-subtle p-4 text-[13px] text-[#475467]">
-              <p className="flex items-center gap-2 font-medium text-foreground"><ShieldCheck className="size-4 text-success" /> How credentials are handled</p>
-              <ul className="list-disc space-y-1.5 pl-4">
-                <li>Nothing is bundled in the installer. Each computer is set up once by an administrator.</li>
-                <li>The connection string is stored in the OS keychain (macOS Keychain / Windows Credential Manager), not in a file.</li>
-                <li>Give each computer its own MongoDB user with only <code>readWrite</code> on the BoxERP database, and restrict Atlas network access to the factory/office IPs.</li>
-                <li>TLS is required; plain <code>mongodb://</code> to a remote host is rejected.</li>
-              </ul>
-            </aside>
-          </div>
-        )}
-      </CardContent>
-      <ConfirmDialog
-        open={confirmForget}
-        onOpenChange={setConfirmForget}
-        title="Disconnect this computer?"
-        description="The saved connection string will be removed from this computer's keychain. Data in MongoDB is not affected. You'll need the credentials again to reconnect."
-        confirmLabel="Disconnect"
-        onConfirm={async () => {
-          try { await forget.mutateAsync(); toast.success("Disconnected"); }
-          catch (e) { toast.error("Couldn't disconnect", { description: e instanceof Error ? e.message : undefined }); throw e; }
-        }}
-      />
-    </Card>
-  );
-}
-
-function DemoImportButton() {
-  const imp = useImportDemo();
-  return (
-    <Button type="button" variant="soft" loading={imp.isPending} onClick={async () => {
-      try {
-        const r = await imp.mutateAsync();
-        toast.success("Demo data loaded", { description: r.collections.map(([n, c]) => `${c} ${n}`).join(", ") });
-      } catch (e) {
-        toast.error("Couldn't load demo data", { description: e instanceof Error ? e.message : undefined });
-      }
-    }}>
-      <DatabaseZap /> Load demo data (dev)
-    </Button>
-  );
-}
-
-function CompanySettingsCard() {
+function CompanySettingsView() {
   const settingsQuery = useCompanySettings();
   const updateSettings = useUpdateCompanySettings();
   const data = settingsQuery.data;
@@ -132,7 +44,6 @@ function CompanySettingsCard() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [gstin, setGstin] = useState("");
-  const [wastageTargetPct, setWastageTargetPct] = useState(3.0);
   const [weeklyOff, setWeeklyOff] = useState("Sunday");
   const [openingCash, setOpeningCash] = useState(0);
   const [openingBank, setOpeningBank] = useState(0);
@@ -145,7 +56,6 @@ function CompanySettingsCard() {
       setAddress(data.address);
       setPhone(data.phone);
       setGstin(data.gstin);
-      setWastageTargetPct(data.wastageTargetPct);
       setWeeklyOff(data.weeklyOff);
       setOpeningCash(data.openingCashBalance / 100);
       setOpeningBank(data.openingBankBalance / 100);
@@ -162,15 +72,19 @@ function CompanySettingsCard() {
         address: address.trim(),
         phone: phone.trim(),
         gstin: gstin.trim(),
-        wastageTargetPct: Number(wastageTargetPct),
+        wastageTargetPct: data?.wastageTargetPct ?? 3.0,
         weeklyOff,
         openingCashBalance: Math.round(Number(openingCash) * 100),
         openingBankBalance: Math.round(Number(openingBank) * 100),
         openingDate,
       });
-      toast.success("Settings saved", { description: "Company profile and factory rules updated." });
+      toast.success("Settings saved", {
+        description: "Company profile and financial balances updated.",
+      });
     } catch (err) {
-      toast.error("Couldn't save settings", { description: err instanceof Error ? err.message : undefined });
+      toast.error("Couldn't save settings", {
+        description: err instanceof Error ? err.message : undefined,
+      });
     }
   };
 
@@ -178,139 +92,421 @@ function CompanySettingsCard() {
     return (
       <Card>
         <CardHeader><Skeleton className="h-6 w-48" /></CardHeader>
-        <CardContent><Skeleton className="h-40 w-full" /></CardContent>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-28 w-full" />
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b border-border pb-4">
-        <div className="flex gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-            <Factory className="size-5" />
-          </span>
-          <div>
-            <CardTitle>Company profile & factory settings</CardTitle>
-            <CardDescription>Printed on salary slips, reports, and used for wastage KPI targets.</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-5">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Company / Factory name" htmlFor="comp-name" required>
-              <Input id="comp-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Gujarat Corrugated Box Industry" />
-            </FormField>
-            <FormField label="GSTIN" htmlFor="comp-gstin">
-              <Input id="comp-gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} placeholder="24AABCB1234D1Z2" />
-            </FormField>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Factory address" htmlFor="comp-address" required>
-              <Input id="comp-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="GIDC Industrial Estate, Rajkot, Gujarat" />
-            </FormField>
-            <FormField label="Contact phone" htmlFor="comp-phone">
-              <Input id="comp-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" />
-            </FormField>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Wastage target (%)" htmlFor="comp-wastage" hint="Target threshold for factory wastage alerts">
-              <Input id="comp-wastage" type="number" step="0.1" min="0" max="100" value={wastageTargetPct} onChange={(e) => setWastageTargetPct(Number(e.target.value))} />
-            </FormField>
-            <FormField label="Weekly off day" htmlFor="comp-weekly-off">
-              <Input id="comp-weekly-off" value={weeklyOff} onChange={(e) => setWeeklyOff(e.target.value)} placeholder="Sunday" />
-            </FormField>
-          </div>
-          <div className="border-t border-border pt-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opening Balances</p>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <FormField label="Opening cash in hand (₹)" htmlFor="comp-open-cash">
-                <Input id="comp-open-cash" type="number" step="any" value={openingCash} onChange={(e) => setOpeningCash(Number(e.target.value))} />
-              </FormField>
-              <FormField label="Opening bank balance (₹)" htmlFor="comp-open-bank">
-                <Input id="comp-open-bank" type="number" step="any" value={openingBank} onChange={(e) => setOpeningBank(Number(e.target.value))} />
-              </FormField>
-              <FormField label="As-of date" htmlFor="comp-open-date" required>
-                <Input id="comp-open-date" type="date" value={openingDate} onChange={(e) => setOpeningDate(e.target.value)} />
-              </FormField>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Business Details Card */}
+      <Card>
+        <CardHeader className="border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <Building2 className="size-5" />
+            </span>
+            <div>
+              <CardTitle className="text-base font-semibold">Factory & Company Profile</CardTitle>
+              <CardDescription className="text-xs">
+                Business identity printed on quotations, proposals, reports, and payment receipts.
+              </CardDescription>
             </div>
           </div>
-          <div className="pt-2">
-            <Button type="submit" loading={updateSettings.isPending} disabled={!name.trim() || !address.trim()}>
-              Save changes
+        </CardHeader>
+        <CardContent className="pt-5 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Company / Business Name" htmlFor="comp-name" required>
+              <Input
+                id="comp-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Gujarat Corrugated Box Industry"
+                className="font-medium"
+              />
+            </FormField>
+            <FormField label="GSTIN (Tax ID)" htmlFor="comp-gstin">
+              <div className="relative">
+                <Receipt className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  id="comp-gstin"
+                  value={gstin}
+                  onChange={(e) => setGstin(e.target.value)}
+                  placeholder="24AABCB1234D1Z2"
+                  className="pl-9 font-mono"
+                />
+              </div>
+            </FormField>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Factory & Works Address" htmlFor="comp-address" required>
+              <div className="relative">
+                <MapPin className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  id="comp-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Plot 42, GIDC Industrial Estate, Rajkot, Gujarat"
+                  className="pl-9"
+                />
+              </div>
+            </FormField>
+            <FormField label="Official Phone / Contact" htmlFor="comp-phone">
+              <div className="relative">
+                <Phone className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  id="comp-phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="pl-9"
+                />
+              </div>
+            </FormField>
+          </div>
+
+          <div className="max-w-xs pt-1">
+            <FormField label="Weekly Factory Holiday" htmlFor="comp-weekly-off">
+              <Input
+                id="comp-weekly-off"
+                value={weeklyOff}
+                onChange={(e) => setWeeklyOff(e.target.value)}
+                placeholder="Sunday"
+              />
+            </FormField>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Opening Balances Card */}
+      <Card>
+        <CardHeader className="border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <Wallet className="size-5" />
+            </span>
+            <div>
+              <CardTitle className="text-base font-semibold">Opening Balances & Books Baseline</CardTitle>
+              <CardDescription className="text-xs">
+                Starting ledger balances used to calculate running cash in hand and bank totals.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-5 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField label="Opening Cash in Hand (₹)" htmlFor="comp-open-cash">
+              <Input
+                id="comp-open-cash"
+                type="number"
+                step="any"
+                value={openingCash}
+                onChange={(e) => setOpeningCash(Number(e.target.value))}
+                className="font-mono text-base"
+              />
+            </FormField>
+            <FormField label="Opening Bank Balance (₹)" htmlFor="comp-open-bank">
+              <Input
+                id="comp-open-bank"
+                type="number"
+                step="any"
+                value={openingBank}
+                onChange={(e) => setOpeningBank(Number(e.target.value))}
+                className="font-mono text-base"
+              />
+            </FormField>
+            <FormField label="Books Baseline Date" htmlFor="comp-open-date" required>
+              <div className="relative">
+                <Calendar className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  id="comp-open-date"
+                  type="date"
+                  value={openingDate}
+                  onChange={(e) => setOpeningDate(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </FormField>
+          </div>
+
+          <div className="flex justify-end pt-3">
+            <Button
+              type="submit"
+              loading={updateSettings.isPending}
+              disabled={!name.trim() || !address.trim()}
+              className="px-6"
+            >
+              <Save className="size-4" /> Save Company Settings
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </form>
   );
 }
 
-function DataSourceCard() {
-  const live = dataSource === "tauri";
+function DatabaseSettingsView() {
+  const status = useDbStatus();
+  const configure = useConfigureDb();
+  const forget = useForgetDb();
+  const [uri, setUri] = useState("");
+  const [database, setDatabase] = useState("boxerp");
+  const [confirmForget, setConfirmForget] = useState(false);
+  const desktop = isTauri();
+  const s = status.data;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await configure.mutateAsync({ uri: uri.trim(), database: database.trim() });
+      setUri("");
+      toast.success("Database connected successfully", {
+        description: `${res.host} / ${res.database}`,
+      });
+    } catch (err) {
+      toast.error("Connection failed", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader><div><CardTitle>Data source</CardTitle><CardDescription>Which screens read and write MongoDB</CardDescription></div></CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        {!live && <p className="rounded-lg bg-info-soft px-3 py-2 text-[13px] text-info-foreground">Running on mock data. Start the desktop app with <code className="font-mono text-xs">VITE_DATA_SOURCE=tauri</code> to use the database.</p>}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase">{live ? "Live (MongoDB)" : "Ready for MongoDB"}</p>
-            <ul className="space-y-1">{LIVE_MODULES.map((m) => <li key={m} className="flex items-center gap-2"><span className="size-2 rounded-full bg-success" />{m}</li>)}</ul>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="border-b border-border pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <Database className="size-5" />
+              </span>
+              <div>
+                <CardTitle className="text-base font-semibold">MongoDB Database Connection</CardTitle>
+                <CardDescription className="text-xs">
+                  Direct IPC connection between the desktop Rust runtime and your MongoDB replica set.
+                </CardDescription>
+              </div>
+            </div>
+
+            {desktop && (
+              status.isLoading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : s?.connected ? (
+                <Badge tone="success" size="md" dot>Connected</Badge>
+              ) : s?.configured ? (
+                <Badge tone="danger" size="md" dot>Unreachable</Badge>
+              ) : (
+                <Badge tone="neutral" size="md" dot>Not Configured</Badge>
+              )
+            )}
           </div>
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase">Still mock data</p>
-            <ul className="space-y-1 text-muted-foreground">{MOCK_MODULES.map((m) => <li key={m} className="flex items-center gap-2"><span className="size-2 rounded-full bg-[#d0d5dd]" />{m}</li>)}</ul>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+
+        <CardContent className="pt-5">
+          {!desktop ? (
+            <div className="flex items-center gap-3 rounded-xl bg-info-soft p-4 text-sm text-info-foreground">
+              <Monitor className="size-5 shrink-0" />
+              <p>
+                You are viewing the browser preview. Launch the desktop application to configure direct MongoDB credentials.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+              <form onSubmit={submit} className="space-y-4">
+                {s?.configured && (
+                  <div className="grid grid-cols-3 gap-3 rounded-xl border border-border bg-subtle p-3.5 text-xs">
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Host / Cluster</span>
+                      <span className="font-semibold text-foreground truncate block">{s.host || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Database</span>
+                      <span className="font-semibold text-foreground">{s.database || "boxerp"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Credentials Stored In</span>
+                      <span className="font-semibold text-foreground">
+                        {s.source === "env" ? "Environment Variable" : "OS Keychain"}
+                      </span>
+                    </div>
+                    {s.error && (
+                      <p className="col-span-3 text-xs text-danger-foreground font-medium pt-1">
+                        Error: {s.error}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <FormField
+                  label="MongoDB Connection String (URI)"
+                  htmlFor="db-uri"
+                  required
+                  hint="mongodb+srv://<user>:<password>@cluster.mongodb.net — stored in your OS keychain"
+                >
+                  <Input
+                    id="db-uri"
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={uri}
+                    onChange={(e) => setUri(e.target.value)}
+                    placeholder={s?.configured ? "•••••••••••••••• (Saved in Keychain — enter new URI to replace)" : "mongodb+srv://user:pass@cluster.mongodb.net"}
+                    className="font-mono text-sm"
+                  />
+                </FormField>
+
+                <div className="max-w-xs">
+                  <FormField label="Database Name" htmlFor="db-name" required>
+                    <Input
+                      id="db-name"
+                      value={database}
+                      onChange={(e) => setDatabase(e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                  </FormField>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <Button
+                    type="submit"
+                    loading={configure.isPending}
+                    disabled={!uri.trim() || !database.trim()}
+                  >
+                    <RefreshCw className="size-4" /> Save & Connect
+                  </Button>
+                  {s?.configured && s.source !== "env" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmForget(true)}
+                      className="text-danger-foreground border-danger/30 hover:bg-danger-soft"
+                    >
+                      <Unplug className="size-4" /> Disconnect Database
+                    </Button>
+                  )}
+                </div>
+              </form>
+
+              {/* Security info card */}
+              <div className="space-y-3 rounded-xl border border-border bg-subtle p-4 text-xs text-[#475467]">
+                <p className="flex items-center gap-2 font-semibold text-foreground text-sm">
+                  <ShieldCheck className="size-4 text-success" /> Zero Plain-Text Storage
+                </p>
+                <ul className="list-disc space-y-2 pl-4 leading-relaxed">
+                  <li>Credentials are saved directly to the hardware-backed <b>OS Keychain</b> (macOS Keychain or Windows Credential Manager).</li>
+                  <li>No database credentials ever touch JavaScript, browser memory, or disk configuration files.</li>
+                  <li>Mandatory TLS 1.3 encryption across all communication between the Rust backend and MongoDB Atlas.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmDialog
+        open={confirmForget}
+        onOpenChange={setConfirmForget}
+        title="Disconnect Database?"
+        description="The saved connection string will be removed from this computer's keychain. Your data in MongoDB remains completely safe. You will need your credentials to reconnect."
+        confirmLabel="Disconnect"
+        onConfirm={async () => {
+          try {
+            await forget.mutateAsync();
+            toast.success("Disconnected from database");
+          } catch (e) {
+            toast.error("Couldn't disconnect", {
+              description: e instanceof Error ? e.message : undefined,
+            });
+            throw e;
+          }
+        }}
+      />
+    </div>
   );
 }
 
-const shortcuts: [string, string][] = [
-  [`${modKeyLabel} K`, "Search & command palette"],
-  [`${modKeyLabel} B`, "Collapse / expand sidebar"],
-  [`${modKeyLabel} 1 – 8`, "Jump to a module"],
-  [`${modKeyLabel} ⇧ E`, "New expense"],
-  [`${modKeyLabel} ⇧ I`, "New income"],
-  ["/", "Focus table search"],
-  [`${modKeyLabel} Enter`, "Save open form"],
-  ["Esc", "Close drawer / dialog"],
-];
+function ShortcutsView() {
+  const shortcutList = [
+    { group: "Navigation", items: [
+      { key: `${modKeyLabel} K`, desc: "Search & Command Palette" },
+      { key: `${modKeyLabel} B`, desc: "Toggle Sidebar Collapse" },
+      { key: `${modKeyLabel} 1`, desc: "Jump to Dashboard" },
+      { key: `${modKeyLabel} 2`, desc: "Jump to Box Costing" },
+      { key: `${modKeyLabel} 3`, desc: "Jump to Inventory" },
+      { key: `${modKeyLabel} 4`, desc: "Jump to Workers & HR" },
+      { key: `${modKeyLabel} 5`, desc: "Jump to Payroll" },
+      { key: `${modKeyLabel} 6`, desc: "Jump to Income & Expenses" },
+      { key: `${modKeyLabel} 7`, desc: "Jump to Reports" },
+      { key: `${modKeyLabel} 8`, desc: "Jump to Settings" },
+    ]},
+    { group: "Actions & Forms", items: [
+      { key: `${modKeyLabel} ⇧ I`, desc: "New Income Transaction" },
+      { key: `${modKeyLabel} ⇧ E`, desc: "New Expense Transaction" },
+      { key: "N", desc: "Add New Item (when in list views)" },
+      { key: "/", desc: "Focus Table Quick Search" },
+      { key: `${modKeyLabel} Enter`, desc: "Save / Submit Current Form" },
+      { key: "Esc", desc: "Close Open Drawer or Dialog" },
+    ]},
+  ];
 
-export default function SettingsPage() {
-  usePageMeta("Settings", "Connection, preferences and shortcuts");
   return (
-    <div className="grid gap-5">
-      <CompanySettingsCard />
-      <DatabaseCard />
-      <DataSourceCard />
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader><div><CardTitle>Keyboard shortcuts</CardTitle><CardDescription>Work faster without the mouse</CardDescription></div></CardHeader>
-          <CardContent>
+    <div className="grid gap-6 md:grid-cols-2">
+      {shortcutList.map((section) => (
+        <Card key={section.group}>
+          <CardHeader className="border-b border-border pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Keyboard className="size-4 text-brand-600" /> {section.group} Shortcuts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
             <ul className="divide-y divide-border">
-              {shortcuts.map(([k, d]) => (
-                <li key={d} className="flex items-center justify-between py-2.5 text-sm">
-                  <span className="text-[#344054]">{d}</span>
-                  <span className="flex gap-1">{k.split(" ").map((p) => <Kbd key={p}>{p}</Kbd>)}</span>
+              {section.items.map((item) => (
+                <li key={item.desc} className="flex items-center justify-between py-2 text-xs">
+                  <span className="text-[#344054] font-medium">{item.desc}</span>
+                  <span className="flex items-center gap-1">
+                    {item.key.split(" ").map((k) => (
+                      <Kbd key={k}>{k}</Kbd>
+                    ))}
+                  </span>
                 </li>
               ))}
             </ul>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><div><CardTitle>Billing & Vyapar</CardTitle><CardDescription>How BoxERP and Vyapar work together</CardDescription></div></CardHeader>
-          <CardContent className="space-y-3 text-sm text-[#475467]">
-            <p className="flex gap-2"><KeyRound className="mt-0.5 size-4 shrink-0 text-brand-500" /> Vyapar remains the system for invoices and GST. BoxERP does not issue bills.</p>
-            <p>Customer receipts and vendor payments can be imported from Vyapar CSV exports. Each imported row keeps its Vyapar voucher number, so importing the same file twice never creates duplicates.</p>
-            <p>When you enter a payment manually, BoxERP warns you if a matching Vyapar entry already exists.</p>
-            <p className="text-xs text-muted-foreground">Data source: <span className="font-medium">{dataSource === "mock" ? "Mock data (UI review)" : "MongoDB"}</span></p>
-          </CardContent>
-        </Card>
+      ))}
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  usePageMeta("Settings", "Company profile, database connection & system shortcuts");
+  const [activeTab, setActiveTab] = useState<"company" | "database" | "shortcuts">("company");
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+          <TabsList>
+            <TabsTrigger value="company" className="flex items-center gap-2">
+              <Building2 className="size-4" /> Company & Factory
+            </TabsTrigger>
+            <TabsTrigger value="database" className="flex items-center gap-2">
+              <Database className="size-4" /> Database Connection
+            </TabsTrigger>
+            <TabsTrigger value="shortcuts" className="flex items-center gap-2">
+              <Keyboard className="size-4" /> Shortcuts
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
+
+      {activeTab === "company" && <CompanySettingsView />}
+      {activeTab === "database" && <DatabaseSettingsView />}
+      {activeTab === "shortcuts" && <ShortcutsView />}
     </div>
   );
 }
