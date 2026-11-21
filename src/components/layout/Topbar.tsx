@@ -17,7 +17,7 @@ function NotificationsButton() {
   return (
     <Popover.Root>
       <Popover.Trigger
-        className="relative flex size-10 items-center justify-center rounded-full text-[#475467] transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="relative flex size-10 items-center justify-center rounded-full text-[#475467] transition-colors cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         aria-label={`Notifications (${alerts.length})`}
       >
         <Bell className="size-[22px]" strokeWidth={1.75} />
@@ -81,7 +81,7 @@ export function Topbar() {
 
       <button
         onClick={() => setCommandOpen(true)}
-        className="flex h-11 w-[min(420px,32vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
+        className="flex h-11 w-[min(420px,32vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors cursor-pointer hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
       >
         <Search className="size-[18px] text-[#475467]" />
         <span className="flex-1 truncate">Search workers, materials, costing…</span>
@@ -93,7 +93,7 @@ export function Topbar() {
       <div className="h-8 w-px bg-border" />
 
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pr-2 pl-1 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50">
+        <DropdownMenuTrigger className="flex items-center gap-3 rounded-full py-1 pr-2 pl-1 outline-none cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50">
           <span className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-800 text-[17px] font-semibold text-white">
             AS
           </span>

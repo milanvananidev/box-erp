@@ -11,7 +11,7 @@ export function SelectTrigger({ className, children, ...props }: React.Component
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm whitespace-nowrap shadow-xs data-[placeholder]:text-[#98a2b3] focus-visible:outline-none focus-visible:border-brand-400 focus-visible:ring-3 focus-visible:ring-brand-100 disabled:opacity-50 aria-invalid:border-danger [&>span]:truncate",
+        "flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm whitespace-nowrap shadow-xs cursor-pointer data-[placeholder]:text-[#98a2b3] focus-visible:outline-none focus-visible:border-brand-400 focus-visible:ring-3 focus-visible:ring-brand-100 disabled:opacity-50 aria-invalid:border-danger [&>span]:truncate",
         className,
       )}
       {...props}
@@ -51,7 +51,7 @@ export function SelectItem({ className, children, ...props }: React.ComponentPro
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex w-full cursor-default items-center rounded-md py-1.5 pr-8 pl-2.5 text-sm outline-none select-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[disabled]:opacity-50",
+        "relative flex w-full cursor-pointer items-center rounded-md py-1.5 pr-8 pl-2.5 text-sm outline-none select-none data-[highlighted]:bg-brand-50 data-[highlighted]:text-brand-800 data-[disabled]:opacity-50",
         className,
       )}
       {...props}

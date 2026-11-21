@@ -25,7 +25,7 @@ function NavEntry({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
         end={item.to === "/"}
         className={({ isActive }) =>
           cn(
-            "group relative flex h-11 items-center gap-3.5 rounded-xl px-3.5 text-[15px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60",
+            "group relative flex h-11 items-center gap-3.5 rounded-xl px-3.5 text-[15px] font-medium transition-colors outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-400/60",
             collapsed && "justify-center px-0",
             isActive
               ? "bg-gradient-to-r from-sidebar-active-from to-sidebar-active-to text-white shadow-[0_6px_16px_-6px_rgba(201,143,79,.55)]"
@@ -83,7 +83,7 @@ export function Sidebar() {
           <button
             onClick={toggle}
             className={cn(
-              "flex h-9 w-full items-center gap-3 rounded-lg px-3 text-[13px] text-sidebar-foreground/80 backdrop-blur-sm transition-colors hover:bg-sidebar-elevated/80 hover:text-white",
+              "flex h-9 w-full items-center gap-3 rounded-lg px-3 text-[13px] text-sidebar-foreground/80 backdrop-blur-sm transition-colors cursor-pointer hover:bg-sidebar-elevated/80 hover:text-white",
               collapsed && "justify-center px-0",
               !collapsed && "bg-sidebar/60",
             )}
