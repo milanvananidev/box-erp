@@ -84,7 +84,7 @@ export function Topbar() {
         className="flex h-11 w-[min(420px,32vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
       >
         <Search className="size-[18px] text-[#475467]" />
-        <span className="flex-1 truncate">Search orders, workers, materials…</span>
+        <span className="flex-1 truncate">Search workers, materials, costing…</span>
         <Kbd className="h-6 px-2 text-xs">{modKeyLabel} + K</Kbd>
       </button>
 

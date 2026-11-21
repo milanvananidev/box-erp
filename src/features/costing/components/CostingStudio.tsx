@@ -7,14 +7,20 @@ import {
   Boxes,
   Layers,
   Percent,
+  Copy,
+  Sliders,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Truck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormField } from "@/components/shared/FormField";
 import { useParties } from "@/features/finance/api";
+import { useCompany } from "@/lib/company";
 import {
   calculateBoxCost,
   createStandardLayers,
@@ -24,16 +30,62 @@ import {
   useSaveQuotation,
   usePaperRates,
 } from "../api";
-import { BoxVisualizer3D } from "./BoxVisualizer3D";
 import { SheetCreasingDiagram } from "./SheetCreasingDiagram";
+import { BoxVisualizer3D } from "./BoxVisualizer3D";
+
+interface PaperGradeOption {
+  id: string;
+  name: string;
+  sub: string;
+  fluteGsm: number;
+  fluteBf: number;
+  linerGsm: number;
+  linerBf: number;
+  fluteRate: number;
+  linerRate: number;
+}
+
+const PAPER_GRADES: PaperGradeOption[] = [
+  {
+    id: "standard",
+    name: "Standard Commercial",
+    sub: "120 GSM Fluting / 150 GSM Liner · 16 BF",
+    fluteGsm: 120,
+    fluteBf: 14,
+    linerGsm: 150,
+    linerBf: 16,
+    fluteRate: 34,
+    linerRate: 38,
+  },
+  {
+    id: "heavy",
+    name: "Heavy Duty Shipper",
+    sub: "140 GSM Fluting / 180 GSM Liner · 20 BF",
+    fluteGsm: 140,
+    fluteBf: 16,
+    linerGsm: 180,
+    linerBf: 20,
+    fluteRate: 36,
+    linerRate: 44,
+  },
+  {
+    id: "export",
+    name: "Virgin Kraft Export",
+    sub: "160 GSM Fluting / 230 GSM Liner · 28 BF",
+    fluteGsm: 160,
+    fluteBf: 18,
+    linerGsm: 230,
+    linerBf: 28,
+    fluteRate: 40,
+    linerRate: 52,
+  },
+];
 
 const INITIAL_BOX: CorrugatedBoxInput = {
   boxNo: "1",
   date: new Date().toISOString().split("T")[0],
-  client: "",
   boxName: "5-Ply Master Shipper Carton",
-  remark: "",
-  unitMode: "mm",
+  remark: "Standard Corrugated Box",
   lengthMm: 300,
   widthMm: 200,
   heightMm: 200,
@@ -65,10 +117,14 @@ export function CostingStudio({
   const partiesQuery = useParties();
   const paperRatesQuery = usePaperRates();
   const saveQuotationMutation = useSaveQuotation();
+  const company = useCompany();
 
   const [input, setInput] = useState<CorrugatedBoxInput>(initialBox || INITIAL_BOX);
   const [unitMode, setUnitMode] = useState<"mm" | "inch">(initialBox?.unitMode === "inch" ? "inch" : "mm");
+  const [studioMode, setStudioMode] = useState<"quick" | "advanced">("quick");
   const [visTab, setVisTab] = useState<"3d" | "2d">("3d");
+  const [selectedGrade, setSelectedGrade] = useState<string>("standard");
+  const [showCostBreakdown, setShowCostBreakdown] = useState<boolean>(false);
 
   // In inch mode, display converted values
   const [dispL, setDispL] = useState<number>(initialBox ? initialBox.lengthMm : 300);
@@ -125,13 +181,48 @@ export function CostingStudio({
     }
   };
 
+  const applyGradeToLayers = (gradeId: string, plyCount: number) => {
+    const grade = PAPER_GRADES.find((g) => g.id === gradeId) || PAPER_GRADES[0];
+    const newLayers: PaperLayer[] = [];
+    for (let i = 1; i <= plyCount; i++) {
+      const isFluting = i % 2 === 0;
+      let role = "";
+      if (i === 1) role = "Top Liner (Face)";
+      else if (i === plyCount) role = "Bottom Liner";
+      else if (isFluting) role = `Fluting ${Math.ceil(i / 2)} (Nali)`;
+      else role = `Center Liner ${Math.floor(i / 2)}`;
+
+      newLayers.push({
+        layerNum: i,
+        role,
+        isFluting,
+        bf: isFluting ? grade.fluteBf : grade.linerBf,
+        gsm: isFluting ? grade.fluteGsm : grade.linerGsm,
+        fluteFactor: isFluting ? 1.5 : 1.0,
+        rate: isFluting ? grade.fluteRate : grade.linerRate,
+      });
+    }
+    return newLayers;
+  };
+
   const handlePlyChange = (plyCount: number) => {
-    const newLayers = createStandardLayers(plyCount);
+    const newLayers = applyGradeToLayers(selectedGrade, plyCount);
     setInput((prev) => ({
       ...prev,
       ply: plyCount,
+      boxName: `${plyCount}-Ply ${(prev.boxName || "").replace(/^[3579]-Ply\s*/i, "") || "Carton"}`,
       layers: newLayers,
     }));
+  };
+
+  const handleGradeChange = (gradeId: string) => {
+    setSelectedGrade(gradeId);
+    const newLayers = applyGradeToLayers(gradeId, input.ply);
+    setInput((prev) => ({
+      ...prev,
+      layers: newLayers,
+    }));
+    toast.success(`Applied ${PAPER_GRADES.find((g) => g.id === gradeId)?.name}`);
   };
 
   const handleLoadPreset = (key: string) => {
@@ -147,7 +238,7 @@ export function CostingStudio({
       setDispW(preset.config.widthMm);
       setDispH(preset.config.heightMm);
     }
-    toast.success(`Loaded preset: ${preset.name}`);
+    toast.success(`Loaded: ${preset.name}`);
   };
 
   const updateLayer = (idx: number, patch: Partial<PaperLayer>) => {
@@ -185,6 +276,27 @@ export function CostingStudio({
   const result = useMemo(() => {
     return calculateBoxCost(input);
   }, [input]);
+
+  const handleCopyWhatsApp = () => {
+    const summaryText = `📦 *QUOTATION - ${input.boxName}*
+*${company.name}*
+
+Client: ${input.client || "Valued Customer"}
+Size: ${input.lengthMm} × ${input.widthMm} × ${input.heightMm} mm (${input.ply}-Ply)
+Order Qty: ${(input.orderQty || 1000).toLocaleString("en-IN")} pcs
+Rate per Box: ₹${result.basicPrice.toFixed(2)}
+GST (${result.taxPercent}%): ₹${result.taxAmount.toFixed(2)}
+Final Rate: ₹${result.priceWithTax.toFixed(2)} / box
+*Total Order: ₹${((result.priceWithTax * (input.orderQty || 1000))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*
+
+Estimated Board BS: ${result.totalBs.toFixed(1)} kg/cm²
+Weight per Box: ${(result.totalWeightKg * 1000).toFixed(0)} grams
+
+For any queries, please call: ${company.phone}`;
+
+    navigator.clipboard.writeText(summaryText);
+    toast.success("Quotation copied to clipboard for WhatsApp!");
+  };
 
   const handleSaveQuotation = async () => {
     if (!input.boxName?.trim()) {
@@ -230,39 +342,60 @@ export function CostingStudio({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Presets */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-            <Sparkles className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold">Costing Studio & Preset Templates</h2>
-            <p className="text-xs text-muted-foreground">Select a standard box template or design custom specifications.</p>
-          </div>
+      {/* Top Bar: Mode Selector & Quick Presets */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-3.5 shadow-card">
+        {/* Simple vs Advanced Mode */}
+        <div className="flex items-center gap-1 rounded-xl border border-border bg-subtle p-1">
+          <button
+            type="button"
+            onClick={() => setStudioMode("quick")}
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+              studioMode === "quick"
+                ? "bg-card text-brand-700 shadow-xs font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Zap className="size-3.5" /> Quick Estimate
+          </button>
+          <button
+            type="button"
+            onClick={() => setStudioMode("advanced")}
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+              studioMode === "advanced"
+                ? "bg-card text-brand-700 shadow-xs font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Sliders className="size-3.5" /> Engineering Studio
+          </button>
         </div>
 
+        {/* Quick Box Templates */}
         <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium hidden sm:inline">Templates:</span>
           {Object.entries(PRESETS).map(([key, p]) => (
             <Button
               key={key}
               variant="outline"
               size="sm"
               onClick={() => handleLoadPreset(key)}
+              className="text-xs h-7"
             >
-              {p.name.split(" ")[0]}
+              {p.name.includes("5-Ply") ? "5-Ply Master" : p.name.includes("3-Ply") ? "3-Ply E-Com" : "7-Ply Industrial"}
             </Button>
           ))}
           <Button
             variant="ghost"
             size="sm"
+            className="text-xs h-7"
             onClick={() => {
               setInput(INITIAL_BOX);
               setDispL(300);
               setDispW(200);
               setDispH(200);
               setUnitMode("mm");
-              toast.info("Reset to default 5-Ply box");
+              setSelectedGrade("standard");
+              toast.info("Reset to default 5-Ply carton");
             }}
           >
             <RotateCcw className="size-3.5" /> Reset
@@ -270,365 +403,658 @@ export function CostingStudio({
         </div>
       </div>
 
-      {/* Main Grid: Inputs vs Results/Visualizers */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Column: Costing Inputs Form (7 cols) */}
-        <div className="space-y-6 lg:col-span-7">
-          {/* Card 1: Box Identity & Dimensions */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Boxes className="size-4 text-brand-600" /> Box Identity & Dimensions
-                </CardTitle>
-                <div className="flex items-center gap-1 rounded-lg border border-border bg-subtle p-0.5 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleUnitToggle("mm")}
-                    className={`rounded px-2 py-0.5 font-medium transition cursor-pointer ${
-                      unitMode === "mm" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
-                    }`}
-                  >
-                    mm
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleUnitToggle("inch")}
-                    className={`rounded px-2 py-0.5 font-medium transition cursor-pointer ${
-                      unitMode === "inch" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
-                    }`}
-                  >
-                    Inches
-                  </button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Box Title / Product Name" htmlFor="box-name" required>
-                  <Input
-                    id="box-name"
-                    value={input.boxName || ""}
-                    onChange={(e) => setInput({ ...input, boxName: e.target.value })}
-                    placeholder="e.g. 5-Ply Master Shipper Carton"
-                  />
-                </FormField>
-                <FormField label="Customer / Client" htmlFor="box-client">
-                  <Input
-                    id="box-client"
-                    list="costing-customers"
-                    value={input.client || ""}
-                    onChange={(e) => setInput({ ...input, client: e.target.value })}
-                    placeholder="Select or enter customer name"
-                  />
-                  <datalist id="costing-customers">
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.name} />
+      {/* Main Studio Grid */}
+      <div className="grid gap-6 lg:grid-cols-12 items-start">
+        {/* Left Column: Costing Inputs (7 cols) */}
+        <div className="space-y-5 lg:col-span-7">
+          {studioMode === "quick" ? (
+            /* ───────────────────────────────────────────────────────────
+               SIMPLE / QUICK QUOTE MODE
+               ─────────────────────────────────────────────────────────── */
+            <>
+              {/* Card 1: Box Dimensions & Ply */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3.5">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                      <Boxes className="size-4 text-brand-600" /> 1. Box Size & Structure
+                    </CardTitle>
+                    {/* Unit Toggle */}
+                    <div className="flex items-center gap-1 rounded-lg border border-border bg-subtle p-0.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleUnitToggle("mm")}
+                        className={`rounded px-2.5 py-1 font-medium transition cursor-pointer ${
+                          unitMode === "mm" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
+                        }`}
+                      >
+                        mm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUnitToggle("inch")}
+                        className={`rounded px-2.5 py-1 font-medium transition cursor-pointer ${
+                          unitMode === "inch" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
+                        }`}
+                      >
+                        Inches
+                      </button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  {/* Ply Structure Selector */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                      Board Ply Selection
+                    </label>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {[
+                        { ply: 3, label: "3-Ply", sub: "Single Wall (Light)" },
+                        { ply: 5, label: "5-Ply", sub: "Double Wall (Standard)" },
+                        { ply: 7, label: "7-Ply", sub: "Triple Wall (Heavy)" },
+                      ].map((item) => (
+                        <button
+                          key={item.ply}
+                          type="button"
+                          onClick={() => handlePlyChange(item.ply)}
+                          className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition cursor-pointer ${
+                            input.ply === item.ply
+                              ? "border-brand-500 bg-brand-50/70 text-brand-800 shadow-xs ring-1 ring-brand-400"
+                              : "border-border bg-card hover:bg-subtle text-foreground"
+                          }`}
+                        >
+                          <span className="text-sm font-bold">{item.label}</span>
+                          <span className="text-[11px] text-muted-foreground">{item.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dimensions Inputs */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField label={`Length (${unitMode})`} htmlFor="dim-l" required>
+                      <Input
+                        id="dim-l"
+                        type="number"
+                        step={unitMode === "inch" ? "0.1" : "1"}
+                        value={dispL}
+                        onChange={(e) => handleDimChange("L", parseFloat(e.target.value) || 0)}
+                        className="text-base font-semibold"
+                      />
+                    </FormField>
+                    <FormField label={`Width (${unitMode})`} htmlFor="dim-w" required>
+                      <Input
+                        id="dim-w"
+                        type="number"
+                        step={unitMode === "inch" ? "0.1" : "1"}
+                        value={dispW}
+                        onChange={(e) => handleDimChange("W", parseFloat(e.target.value) || 0)}
+                        className="text-base font-semibold"
+                      />
+                    </FormField>
+                    <FormField label={`Height (${unitMode})`} htmlFor="dim-h" required>
+                      <Input
+                        id="dim-h"
+                        type="number"
+                        step={unitMode === "inch" ? "0.1" : "1"}
+                        value={dispH}
+                        onChange={(e) => handleDimChange("H", parseFloat(e.target.value) || 0)}
+                        className="text-base font-semibold"
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Box Name & Client */}
+                  <div className="grid gap-3 sm:grid-cols-2 pt-1">
+                    <FormField label="Box Title" htmlFor="box-name" required>
+                      <Input
+                        id="box-name"
+                        value={input.boxName || ""}
+                        onChange={(e) => setInput({ ...input, boxName: e.target.value })}
+                        placeholder="e.g. 5-Ply Shipper Carton"
+                      />
+                    </FormField>
+                    <FormField label="Customer / Party" htmlFor="box-client">
+                      <Input
+                        id="box-client"
+                        list="costing-customers"
+                        value={input.client || ""}
+                        onChange={(e) => setInput({ ...input, client: e.target.value })}
+                        placeholder="Select or enter customer"
+                      />
+                      <datalist id="costing-customers">
+                        {customers.map((c) => (
+                          <option key={c.id} value={c.name} />
+                        ))}
+                      </datalist>
+                    </FormField>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Paper Quality & Finish */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3.5">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Layers className="size-4 text-brand-600" /> 2. Paper Quality & Printing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  {/* Paper Grade Selector */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                      Paper Quality Grade
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {PAPER_GRADES.map((grade) => (
+                        <button
+                          key={grade.id}
+                          type="button"
+                          onClick={() => handleGradeChange(grade.id)}
+                          className={`flex flex-col items-start rounded-xl border p-3 text-left transition cursor-pointer ${
+                            selectedGrade === grade.id
+                              ? "border-brand-500 bg-brand-50/70 text-brand-900 shadow-xs ring-1 ring-brand-400"
+                              : "border-border bg-card hover:bg-subtle text-foreground"
+                          }`}
+                        >
+                          <span className="text-xs font-bold">{grade.name}</span>
+                          <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{grade.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Printing Color Selection */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <FormField label="Flexo Printing" htmlFor="print-type">
+                      <Select
+                        value={input.printingRate === 0 ? "none" : input.printingRate === 0.5 ? "1color" : input.printingRate === 1.0 ? "2color" : "multi"}
+                        onValueChange={(val) => {
+                          const rates: Record<string, number> = { none: 0.0, "1color": 0.5, "2color": 1.0, multi: 2.0 };
+                          setInput({ ...input, printingRate: rates[val] ?? 0 });
+                        }}
+                      >
+                        <SelectTrigger id="print-type"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Plain (No Print) — ₹0.00</SelectItem>
+                          <SelectItem value="1color">1-Color Flexo (+₹0.50/box)</SelectItem>
+                          <SelectItem value="2color">2-Color Flexo (+₹1.00/box)</SelectItem>
+                          <SelectItem value="multi">Multicolor Flexo (+₹2.00/box)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+
+                    <FormField label="Transport / Freight (₹/box)" htmlFor="transport">
+                      <Input
+                        id="transport"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={input.transportPerBox || 0}
+                        onChange={(e) => setInput({ ...input, transportPerBox: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.00"
+                      />
+                    </FormField>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Order Quantity & Margin */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3.5">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Percent className="size-4 text-brand-600" /> 3. Quantity & Profit Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField label="Order Quantity (Boxes)" htmlFor="order-qty" required>
+                      <Input
+                        id="order-qty"
+                        type="number"
+                        step="100"
+                        min="1"
+                        value={input.orderQty || 1000}
+                        onChange={(e) => setInput({ ...input, orderQty: parseInt(e.target.value) || 0 })}
+                        className="text-base font-semibold"
+                      />
+                    </FormField>
+
+                    <FormField label="Profit Margin (%)" htmlFor="profit-pct" required>
+                      <Input
+                        id="profit-pct"
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        value={input.profitPercent}
+                        onChange={(e) => setInput({ ...input, profitPercent: parseFloat(e.target.value) || 0 })}
+                        className="text-base font-semibold"
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Quick Margin Pills */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-xs text-muted-foreground font-medium">Quick Margin:</span>
+                    {[8, 10, 12, 15, 20].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => setInput({ ...input, profitPercent: pct })}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                          input.profitPercent === pct
+                            ? "bg-brand-600 text-white font-bold"
+                            : "bg-subtle text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
                     ))}
-                  </datalist>
-                </FormField>
-              </div>
+                  </div>
 
-              {/* Dimensions */}
-              <div className="grid grid-cols-3 gap-3">
-                <FormField label={`Length (${unitMode})`} htmlFor="dim-l" required>
-                  <Input
-                    id="dim-l"
-                    type="number"
-                    step="any"
-                    value={dispL || ""}
-                    onChange={(e) => handleDimChange("L", parseFloat(e.target.value) || 0)}
-                  />
-                </FormField>
-                <FormField label={`Width (${unitMode})`} htmlFor="dim-w" required>
-                  <Input
-                    id="dim-w"
-                    type="number"
-                    step="any"
-                    value={dispW || ""}
-                    onChange={(e) => handleDimChange("W", parseFloat(e.target.value) || 0)}
-                  />
-                </FormField>
-                <FormField label={`Height (${unitMode})`} htmlFor="dim-h" required>
-                  <Input
-                    id="dim-h"
-                    type="number"
-                    step="any"
-                    value={dispH || ""}
-                    onChange={(e) => handleDimChange("H", parseFloat(e.target.value) || 0)}
-                  />
-                </FormField>
-              </div>
+                  {/* Switch to Detailed Link */}
+                  <div className="border-t border-border/80 pt-3 flex justify-between items-center text-xs text-muted-foreground">
+                    <span>Need layer-by-layer GSM/BF or custom machine allowances?</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setStudioMode("advanced")}
+                      className="p-0 h-auto text-brand-600 font-semibold cursor-pointer"
+                    >
+                      Open Engineering Studio →
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            /* ───────────────────────────────────────────────────────────
+               ADVANCED / ENGINEERING STUDIO MODE
+               ─────────────────────────────────────────────────────────── */
+            <>
+              {/* Detailed Specs Card */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                      <Boxes className="size-4 text-brand-600" /> Machine Specifications & Sizing
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setStudioMode("quick")}
+                      className="text-xs text-brand-600"
+                    >
+                      ← Back to Quick Estimate
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <FormField label={`Length (${unitMode})`} required>
+                      <Input
+                        type="number"
+                        value={dispL}
+                        onChange={(e) => handleDimChange("L", parseFloat(e.target.value) || 0)}
+                      />
+                    </FormField>
+                    <FormField label={`Width (${unitMode})`} required>
+                      <Input
+                        type="number"
+                        value={dispW}
+                        onChange={(e) => handleDimChange("W", parseFloat(e.target.value) || 0)}
+                      />
+                    </FormField>
+                    <FormField label={`Height (${unitMode})`} required>
+                      <Input
+                        type="number"
+                        value={dispH}
+                        onChange={(e) => handleDimChange("H", parseFloat(e.target.value) || 0)}
+                      />
+                    </FormField>
+                  </div>
 
-              {/* Allowances & Ups */}
-              <div className="grid grid-cols-3 gap-3 pt-1 border-t border-border text-xs">
-                <FormField label="Joint Lap (mm)" htmlFor="add-l" hint="Stitching / Pasting flap">
-                  <Input
-                    id="add-l"
-                    type="number"
-                    value={input.addLMm ?? 50}
-                    onChange={(e) => setInput({ ...input, addLMm: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Flap Allow. (mm)" htmlFor="add-w" hint="Creasing fold tolerance">
-                  <Input
-                    id="add-w"
-                    type="number"
-                    value={input.addWMm ?? 20}
-                    onChange={(e) => setInput({ ...input, addWMm: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Ups (Cutting)" htmlFor="ups" hint="Boxes cut per sheet">
-                  <Input
-                    id="ups"
-                    type="number"
-                    min="1"
-                    value={input.ups ?? 1}
-                    onChange={(e) => setInput({ ...input, ups: Math.max(1, parseInt(e.target.value) || 1) })}
-                  />
-                </FormField>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <FormField label="Ply Count">
+                      <Select
+                        value={String(input.ply)}
+                        onValueChange={(val) => handlePlyChange(parseInt(val))}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3-Ply (Single Wall)</SelectItem>
+                          <SelectItem value="5">5-Ply (Double Wall)</SelectItem>
+                          <SelectItem value="7">7-Ply (Triple Wall)</SelectItem>
+                          <SelectItem value="9">9-Ply (Heavy)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+                    <FormField label="Lap Allowance (mm)">
+                      <Input
+                        type="number"
+                        value={input.addLMm}
+                        onChange={(e) => setInput({ ...input, addLMm: parseFloat(e.target.value) || 0 })}
+                      />
+                    </FormField>
+                    <FormField label="Flap Allowance (mm)">
+                      <Input
+                        type="number"
+                        value={input.addWMm}
+                        onChange={(e) => setInput({ ...input, addWMm: parseFloat(e.target.value) || 0 })}
+                      />
+                    </FormField>
+                    <FormField label="Wastage (%)">
+                      <Input
+                        type="number"
+                        step="0.5"
+                        value={input.wastePercent}
+                        onChange={(e) => setInput({ ...input, wastePercent: parseFloat(e.target.value) || 0 })}
+                      />
+                    </FormField>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Card 2: Ply Construction & Paper Layers */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Layers className="size-4 text-brand-600" /> Ply Construction & Paper Layers
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={String(input.ply)}
-                    onValueChange={(v) => handlePlyChange(parseInt(v, 10))}
-                  >
-                    <SelectTrigger className="h-8 w-28 text-xs font-semibold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3-Ply Board</SelectItem>
-                      <SelectItem value="5">5-Ply Board</SelectItem>
-                      <SelectItem value="7">7-Ply Board</SelectItem>
-                      <SelectItem value="9">9-Ply Board</SelectItem>
-                    </SelectContent>
-                  </Select>
-
+              {/* Layer-by-Layer Construction Table */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                      <Layers className="size-4 text-brand-600" /> Layer-by-Layer Board Construction
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Set custom GSM, Burst Factor (BF), and paper rate for each ply.
+                    </CardDescription>
+                  </div>
                   <Button
-                    type="button"
-                    variant="soft"
+                    variant="outline"
                     size="sm"
-                    className="h-8 text-xs"
                     onClick={autoFillRatesFromMatrix}
-                    title="Auto-fill paper rates from the Rate Matrix based on BF & GSM"
+                    className="text-xs"
                   >
-                    Auto-Fill Rates
+                    <Sparkles className="size-3.5 text-brand-600" /> Auto-fill Rates
                   </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4 p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-subtle text-muted-foreground font-semibold border-b border-border">
-                    <tr>
-                      <th className="py-2 px-3">#</th>
-                      <th className="py-2 px-3">Role</th>
-                      <th className="py-2 px-2 text-center">Type</th>
-                      <th className="py-2 px-2 w-16">BF</th>
-                      <th className="py-2 px-2 w-16">GSM</th>
-                      <th className="py-2 px-2 w-16">Take-up</th>
-                      <th className="py-2 px-2 w-20">Rate (₹/kg)</th>
-                      <th className="py-2 px-3 text-right">Paper Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {result.layers.map((layer, idx) => (
-                      <tr key={idx} className={layer.isFluting ? "bg-brand-50/30" : undefined}>
-                        <td className="py-2.5 px-3 font-mono font-medium text-muted-foreground">
-                          L{idx + 1}
-                        </td>
-                        <td className="py-2.5 px-3 font-medium">
-                          {layer.role}
-                        </td>
-                        <td className="py-2.5 px-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateLayer(idx, {
-                                isFluting: !layer.isFluting,
-                                fluteFactor: !layer.isFluting ? 1.5 : 1.0,
-                              })
-                            }
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold transition cursor-pointer border ${
-                              layer.isFluting
-                                ? "bg-amber-100 text-amber-900 border-amber-300"
-                                : "bg-zinc-100 text-zinc-700 border-zinc-200"
-                            }`}
-                          >
-                            {layer.isFluting ? "Nali (Flute)" : "Liner (Flat)"}
-                          </button>
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs px-1.5"
-                            value={layer.bf}
-                            onChange={(e) => updateLayer(idx, { bf: parseFloat(e.target.value) || 0 })}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs px-1.5"
-                            value={layer.gsm}
-                            onChange={(e) => updateLayer(idx, { gsm: parseFloat(e.target.value) || 0 })}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.05"
-                            disabled={!layer.isFluting}
-                            className="h-7 text-xs px-1.5 disabled:opacity-40"
-                            value={layer.fluteFactor}
-                            onChange={(e) => updateLayer(idx, { fluteFactor: parseFloat(e.target.value) || 1 })}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            step="0.5"
-                            className="h-7 text-xs px-1.5"
-                            value={layer.rate}
-                            onChange={(e) => updateLayer(idx, { rate: parseFloat(e.target.value) || 0 })}
-                          />
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-semibold">
-                          ₹{layer.costRs?.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-subtle font-semibold border-t border-border">
-                    <tr>
-                      <td colSpan={3} className="py-2 px-3 text-muted-foreground">Totals</td>
-                      <td className="py-2 px-2 font-mono text-brand-700">{result.totalBs} BS</td>
-                      <td className="py-2 px-2 font-mono">{result.totalGsm} GSM</td>
-                      <td className="py-2 px-2 font-mono">{(result.totalWeightKg * 1000).toFixed(0)} g/box</td>
-                      <td colSpan={2} className="py-2 px-3 text-right font-mono text-brand-700 text-sm">
-                        ₹{result.totalPaperCost.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent className="pt-3">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="border-b border-border bg-subtle text-muted-foreground uppercase text-[10px]">
+                        <tr>
+                          <th className="p-2">#</th>
+                          <th className="p-2">Layer Role</th>
+                          <th className="p-2 w-20">BF</th>
+                          <th className="p-2 w-24">GSM</th>
+                          <th className="p-2 w-20">Flute Fac</th>
+                          <th className="p-2 w-24">Rate (₹/kg)</th>
+                          <th className="p-2 text-right">Cost/Box</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {input.layers.map((layer, idx) => {
+                          const layerCost = ((result.sheetLengthInch * result.sheetWidthInch * layer.gsm * layer.fluteFactor * 645.16) / 1e9) * layer.rate;
+                          return (
+                            <tr key={layer.layerNum} className={layer.isFluting ? "bg-brand-50/20" : ""}>
+                              <td className="p-2 font-mono text-muted-foreground">{layer.layerNum}</td>
+                              <td className="p-2 font-medium">
+                                <span className={layer.isFluting ? "text-brand-700 font-semibold" : ""}>
+                                  {layer.role}
+                                </span>
+                              </td>
+                              <td className="p-2">
+                                <Input
+                                  type="number"
+                                  className="h-7 text-xs px-2"
+                                  value={layer.bf}
+                                  onChange={(e) => updateLayer(idx, { bf: parseFloat(e.target.value) || 0 })}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <Input
+                                  type="number"
+                                  className="h-7 text-xs px-2"
+                                  value={layer.gsm}
+                                  onChange={(e) => updateLayer(idx, { gsm: parseFloat(e.target.value) || 0 })}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <Input
+                                  type="number"
+                                  step="0.05"
+                                  className="h-7 text-xs px-2 font-mono"
+                                  value={layer.fluteFactor}
+                                  disabled={!layer.isFluting}
+                                  onChange={(e) => updateLayer(idx, { fluteFactor: parseFloat(e.target.value) || 1.0 })}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <Input
+                                  type="number"
+                                  step="0.5"
+                                  className="h-7 text-xs px-2 font-mono"
+                                  value={layer.rate}
+                                  onChange={(e) => updateLayer(idx, { rate: parseFloat(e.target.value) || 0 })}
+                                />
+                              </td>
+                              <td className="p-2 text-right font-mono font-medium">
+                                ₹{layerCost.toFixed(2)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Card 3: Overheads, Conversion, Margin & Tax */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Percent className="size-4 text-brand-600" /> Overheads, Conversion, Margin & Tax
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <FormField label="Wastage (%)" htmlFor="oh-waste">
-                  <Input
-                    id="oh-waste"
-                    type="number"
-                    step="0.1"
-                    value={input.wastePercent ?? 3}
-                    onChange={(e) => setInput({ ...input, wastePercent: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Conversion Rate" htmlFor="oh-conv" hint={input.convType === 1 ? "₹ / kg" : "₹ / box"}>
-                  <Input
-                    id="oh-conv"
-                    type="number"
-                    step="0.5"
-                    value={input.conversionRate ?? 10}
-                    onChange={(e) => setInput({ ...input, conversionRate: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Printing (₹/box)" htmlFor="oh-print">
-                  <Input
-                    id="oh-print"
-                    type="number"
-                    step="0.1"
-                    value={input.printingRate ?? 0}
-                    onChange={(e) => setInput({ ...input, printingRate: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Transport (₹/box)" htmlFor="oh-trans">
-                  <Input
-                    id="oh-trans"
-                    type="number"
-                    step="0.1"
-                    value={input.transportPerBox ?? 0}
-                    onChange={(e) => setInput({ ...input, transportPerBox: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-2 border-t border-border">
-                <FormField label="Order Qty (pcs)" htmlFor="oh-qty">
-                  <Input
-                    id="oh-qty"
-                    type="number"
-                    value={input.orderQty ?? 1000}
-                    onChange={(e) => setInput({ ...input, orderQty: Math.max(1, parseInt(e.target.value) || 1) })}
-                  />
-                </FormField>
-                <FormField label="Setup Cost (₹)" htmlFor="oh-setup" hint="Amortized over order">
-                  <Input
-                    id="oh-setup"
-                    type="number"
-                    value={input.setupCost ?? 0}
-                    onChange={(e) => setInput({ ...input, setupCost: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="Profit Margin (%)" htmlFor="oh-profit">
-                  <Input
-                    id="oh-profit"
-                    type="number"
-                    step="0.5"
-                    value={input.profitPercent ?? 10}
-                    onChange={(e) => setInput({ ...input, profitPercent: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-                <FormField label="GST / Tax (%)" htmlFor="oh-tax">
-                  <Input
-                    id="oh-tax"
-                    type="number"
-                    value={input.taxPercent ?? 12}
-                    onChange={(e) => setInput({ ...input, taxPercent: parseFloat(e.target.value) || 0 })}
-                  />
-                </FormField>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Overheads Card */}
+              <Card>
+                <CardHeader className="border-b border-border pb-3">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Truck className="size-4 text-brand-600" /> Conversion, Printing & Overheads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 grid gap-3 sm:grid-cols-3">
+                  <FormField label="Conversion Rate (₹/kg)">
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={input.conversionRate}
+                      onChange={(e) => setInput({ ...input, conversionRate: parseFloat(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                  <FormField label="Printing Rate (₹/box)">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={input.printingRate}
+                      onChange={(e) => setInput({ ...input, printingRate: parseFloat(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                  <FormField label="Transport (₹/box)">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={input.transportPerBox}
+                      onChange={(e) => setInput({ ...input, transportPerBox: parseFloat(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                  <FormField label="Stereo / Setup Cost (₹ total)">
+                    <Input
+                      type="number"
+                      value={input.setupCost}
+                      onChange={(e) => setInput({ ...input, setupCost: parseFloat(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                  <FormField label="Order Qty (Pcs)">
+                    <Input
+                      type="number"
+                      value={input.orderQty}
+                      onChange={(e) => setInput({ ...input, orderQty: parseInt(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                  <FormField label="Margin (%)">
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={input.profitPercent}
+                      onChange={(e) => setInput({ ...input, profitPercent: parseFloat(e.target.value) || 0 })}
+                    />
+                  </FormField>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
-        {/* Right Column: Visualizer, Cost Summary & Actions (5 cols) */}
-        <div className="space-y-6 lg:col-span-5">
-          {/* Card: 3D Simulation & Creasing Blueprint */}
-          <Card className="overflow-hidden">
-            <CardHeader className="border-b border-border pb-3 flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-sm font-semibold">Visualizer & Blueprint</CardTitle>
-                <CardDescription className="text-xs">
-                  Blank: {result.sheetLengthInch}&quot; × {result.sheetWidthInch}&quot; ({result.inMmL} × {result.inMmW} mm)
-                </CardDescription>
+        {/* Right Column: Hero Price Card & Visualizer (5 cols) */}
+        <div className="space-y-5 lg:col-span-5 lg:sticky lg:top-4">
+          {/* Price Summary Hero Card */}
+          <Card className="border-brand-200 bg-gradient-to-b from-brand-50/40 to-card shadow-card overflow-hidden">
+            <CardHeader className="border-b border-brand-100/80 pb-3 bg-brand-50/60">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-brand-700 tracking-wider uppercase">Live Cost Estimate</span>
+                  <CardTitle className="text-xl font-bold text-foreground">
+                    ₹{result.basicPrice.toFixed(2)}{" "}
+                    <span className="text-xs font-normal text-muted-foreground">/ box</span>
+                  </CardTitle>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-muted-foreground block">With 12% GST</span>
+                  <span className="text-sm font-semibold text-brand-800">₹{result.priceWithTax.toFixed(2)}</span>
+                </div>
               </div>
-              <Tabs value={visTab} onValueChange={(v) => setVisTab(v as "3d" | "2d")}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="3d" className="text-xs px-2.5 py-1">3D Box</TabsTrigger>
-                  <TabsTrigger value="2d" className="text-xs px-2.5 py-1">2D Creasing</TabsTrigger>
-                </TabsList>
-              </Tabs>
+            </CardHeader>
+
+            <CardContent className="pt-4 space-y-4">
+              {/* Total Order Banner */}
+              <div className="rounded-xl border border-brand-200/80 bg-card p-3 shadow-xs">
+                <div className="flex justify-between items-center text-xs text-muted-foreground mb-1">
+                  <span>Total Order ({(input.orderQty || 1000).toLocaleString("en-IN")} pcs)</span>
+                  <span className="font-medium text-foreground">₹{result.priceWithTax.toFixed(2)} ea</span>
+                </div>
+                <div className="text-2xl font-black tracking-tight text-brand-700 font-mono">
+                  ₹{((result.priceWithTax * (input.orderQty || 1000))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+
+              {/* Technical Specifications Strip */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs tabular">
+                <div className="rounded-lg border border-border bg-subtle p-2">
+                  <span className="text-[10px] text-muted-foreground block">Box Weight</span>
+                  <span className="font-semibold text-foreground">{(result.totalWeightKg * 1000).toFixed(0)} g</span>
+                </div>
+                <div className="rounded-lg border border-border bg-subtle p-2">
+                  <span className="text-[10px] text-muted-foreground block">Burst Strength</span>
+                  <span className="font-semibold text-brand-700">{result.totalBs.toFixed(1)} kg/cm²</span>
+                </div>
+                <div className="rounded-lg border border-border bg-subtle p-2">
+                  <span className="text-[10px] text-muted-foreground block">Total GSM</span>
+                  <span className="font-semibold text-foreground">{result.totalGsm.toFixed(0)}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 pt-1">
+                <Button
+                  onClick={handleSaveQuotation}
+                  loading={saveQuotationMutation.isPending}
+                  className="w-full text-sm font-semibold shadow-xs"
+                >
+                  <Save className="size-4" /> Save as Quotation
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyWhatsApp}
+                  className="w-full text-xs text-brand-700 border-brand-200 hover:bg-brand-50"
+                >
+                  <Copy className="size-3.5" /> Copy WhatsApp Proposal
+                </Button>
+              </div>
+
+              {/* Expandable Cost Breakdown Accordion */}
+              <div className="border-t border-border pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCostBreakdown(!showCostBreakdown)}
+                  className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground font-medium py-1 cursor-pointer"
+                >
+                  <span>Detailed Cost Breakdown</span>
+                  {showCostBreakdown ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                </button>
+
+                {showCostBreakdown && (
+                  <div className="space-y-1.5 text-xs pt-2 font-mono divide-y divide-border/60">
+                    <div className="flex justify-between py-1">
+                      <span className="text-muted-foreground">Raw Paper Cost</span>
+                      <span>₹{result.totalPaperCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-muted-foreground">Wastage ({result.taxPercent}%)</span>
+                      <span>₹{result.wastageCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-muted-foreground">Conversion</span>
+                      <span>₹{result.conversionCost.toFixed(2)}</span>
+                    </div>
+                    {result.printingCost > 0 && (
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Printing</span>
+                        <span>₹{result.printingCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {result.transportCost > 0 && (
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Transport</span>
+                        <span>₹{result.transportCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between py-1 font-semibold text-foreground">
+                      <span>Total Mfg Cost</span>
+                      <span>₹{result.manufacturingCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-brand-700">
+                      <span>Profit Margin ({input.profitPercent}%)</span>
+                      <span>+₹{result.profitAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between py-1 font-bold text-foreground">
+                      <span>Basic Price / Box</span>
+                      <span>₹{result.basicPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Visualizer Card (3D / 2D) */}
+          <Card className="overflow-hidden">
+            <CardHeader className="border-b border-border p-3 flex flex-row items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Interactive Preview
+              </span>
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-subtle p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setVisTab("3d")}
+                  className={`rounded px-2.5 py-1 font-medium transition cursor-pointer ${
+                    visTab === "3d" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
+                  }`}
+                >
+                  3D Simulation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisTab("2d")}
+                  className={`rounded px-2.5 py-1 font-medium transition cursor-pointer ${
+                    visTab === "2d" ? "bg-card text-foreground shadow-xs font-bold" : "text-muted-foreground"
+                  }`}
+                >
+                  2D Creasing Plan
+                </button>
+              </div>
             </CardHeader>
             <CardContent className="p-3">
               {visTab === "3d" ? (
@@ -644,94 +1070,14 @@ export function CostingStudio({
                   length={input.lengthMm}
                   width={input.widthMm}
                   height={input.heightMm}
-                  addL={input.addLMm ?? 50}
-                  addW={input.addWMm ?? 20}
+                  addL={input.addLMm || 0}
+                  addW={input.addWMm || 0}
                   unit={unitMode}
                   ply={input.ply}
                   sheetLengthInch={result.sheetLengthInch}
                   sheetWidthInch={result.sheetWidthInch}
-                  isEmbedded={true}
                 />
               )}
-            </CardContent>
-          </Card>
-
-          {/* Card: Live Cost Breakdown & Pricing */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3">
-              <CardTitle className="text-sm font-semibold">Cost Breakdown & Pricing Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-3">
-                  <div className="text-xs text-muted-foreground font-medium">Basic Box Rate</div>
-                  <div className="mt-1 text-2xl font-bold text-brand-700 tabular">
-                    ₹{result.basicPrice.toFixed(2)}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">Ex-factory rate per box</div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-subtle p-3">
-                  <div className="text-xs text-muted-foreground font-medium">Price With GST ({result.taxPercent}%)</div>
-                  <div className="mt-1 text-2xl font-bold text-foreground tabular">
-                    ₹{result.priceWithTax.toFixed(2)}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">Total per box incl. tax</div>
-                </div>
-              </div>
-
-              {/* Breakdown List */}
-              <div className="divide-y divide-border rounded-xl border border-border bg-card text-xs">
-                <div className="flex justify-between py-2 px-3">
-                  <span className="text-muted-foreground">Raw Paper Cost</span>
-                  <span className="font-mono font-medium">₹{result.totalPaperCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-3">
-                  <span className="text-muted-foreground">Wastage ({input.wastePercent}%)</span>
-                  <span className="font-mono font-medium">₹{result.wastageCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-3">
-                  <span className="text-muted-foreground">Conversion</span>
-                  <span className="font-mono font-medium">₹{result.conversionCost.toFixed(2)}</span>
-                </div>
-                {result.printingCost > 0 && (
-                  <div className="flex justify-between py-2 px-3">
-                    <span className="text-muted-foreground">Printing</span>
-                    <span className="font-mono font-medium">₹{result.printingCost.toFixed(2)}</span>
-                  </div>
-                )}
-                {result.transportCost > 0 && (
-                  <div className="flex justify-between py-2 px-3">
-                    <span className="text-muted-foreground">Freight / Transport</span>
-                    <span className="font-mono font-medium">₹{result.transportCost.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between py-2 px-3 bg-subtle font-medium">
-                  <span>Manufacturing Cost</span>
-                  <span className="font-mono font-bold">₹{result.manufacturingCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-3 text-success-foreground">
-                  <span>Profit Margin ({input.profitPercent}%)</span>
-                  <span className="font-mono font-semibold">+₹{result.profitAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 px-3 bg-subtle font-bold text-foreground">
-                  <span>Total Order Value ({input.orderQty || 1000} pcs)</span>
-                  <span className="font-mono text-sm text-brand-700">
-                    ₹{((result.priceWithTax * (input.orderQty || 1000))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  onClick={handleSaveQuotation}
-                  loading={saveQuotationMutation.isPending}
-                  className="w-full"
-                >
-                  <Save className="size-4" /> Save as Quotation
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
