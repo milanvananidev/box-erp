@@ -86,6 +86,11 @@ macro_rules! app_commands {
             commands::settings::company_settings_update,
             commands::vyapar::vyapar_import,
             commands::export::export_xlsx,
+            commands::costing::quotations_list,
+            commands::costing::quotation_save,
+            commands::costing::quotation_delete,
+            commands::costing::paper_rates_get,
+            commands::costing::paper_rates_save,
             $($extra),*
         ]
     };

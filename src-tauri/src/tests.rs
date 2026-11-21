@@ -822,3 +822,120 @@ Date,Invoice No.,Party Name,Transaction Type,Total Amount,Payment Mode,Descripti
 
     s.db.drop().await.ok();
 }
+
+#[tokio::test]
+async fn costing_and_quotations_and_paper_rates() {
+    let s = match store("costing_quotations").await {
+        Some(s) => s,
+        None => return,
+    };
+
+    use crate::commands::costing;
+    use crate::model::costing::*;
+
+    // 1. Paper rates
+    let rates = costing::get_paper_rates(&s).await.unwrap();
+    assert_eq!(rates.len(), 5);
+    assert_eq!(rates[0].paper_type, "Semi Kraft");
+
+    let mut updated_rates = rates.clone();
+    updated_rates[0].rate_per_kg = 35.5;
+    costing::save_paper_rates(&s, updated_rates.clone()).await.unwrap();
+
+    let re_read_rates = costing::get_paper_rates(&s).await.unwrap();
+    assert_eq!(re_read_rates[0].rate_per_kg, 35.5);
+
+    // 2. Save quotation
+    let sample_quote = QuotationDoc {
+        id: "".into(),
+        quotation_number: "".into(),
+        client_id: None,
+        client_name: "Gujarat Fruits Packaging".into(),
+        box_name: "5-Ply Apple Shipper Box".into(),
+        date: "2026-10-15".into(),
+        status: "DRAFT".into(),
+        unit_mode: "mm".into(),
+        input: CorrugatedBoxInput {
+            box_no: Some("1".into()),
+            date: Some("2026-10-15".into()),
+            client: Some("Gujarat Fruits Packaging".into()),
+            c_name: None,
+            box_name: Some("5-Ply Apple Shipper Box".into()),
+            remark: None,
+            unit_mode: Some("mm".into()),
+            length_mm: 350.0,
+            width_mm: 250.0,
+            height_mm: 200.0,
+            ply: 5,
+            layers: vec![],
+            add_l_mm: Some(50.0),
+            add_w_mm: Some(20.0),
+            ups: Some(1.0),
+            waste_percent: Some(3.0),
+            conversion_rate: Some(10.0),
+            conv_type: Some(1),
+            printing_rate: Some(0.0),
+            transport_per_box: Some(0.0),
+            lamination_per_box: Some(0.0),
+            partition_cost: Some(0.0),
+            setup_cost: Some(0.0),
+            order_qty: Some(1000.0),
+            profit_percent: Some(10.0),
+            tax_percent: Some(12.0),
+        },
+        result: CorrugatedBoxResult {
+            sheet_length_inch: 49.21,
+            sheet_width_inch: 18.50,
+            sheet_area_sqm: 0.587,
+            in_mm_l: 1250.0,
+            in_mm_w: 470.0,
+            layers: vec![],
+            total_gsm: 680.0,
+            total_bs: 10.5,
+            total_weight_kg: 0.45,
+            total_paper_weight_kg: 0.45,
+            total_paper_cost: 16.20,
+            wastage_cost: 0.49,
+            conversion_cost: 4.50,
+            printing_cost: 0.0,
+            transport_cost: 0.0,
+            lamination_cost: 0.0,
+            partition_cost: 0.0,
+            setup_cost_per_box: 0.0,
+            manufacturing_cost: 21.19,
+            base_manufacturing_cost: 21.19,
+            profit_amount: 2.12,
+            basic_price: 23.31,
+            tax_percent: 12.0,
+            tax_amount: 2.80,
+            final_box_rate: 23.31,
+            price_with_tax: 26.11,
+        },
+        quantity: 1000.0,
+        basic_price: 23.31,
+        tax_percent: 12.0,
+        tax_amount: 2800.0,
+        total_amount: 26110.0,
+        notes: Some("Urgent dispatch".into()),
+        created_at: "2026-10-15T10:00:00Z".into(),
+    };
+
+    let saved = costing::save_quotation(&s, sample_quote).await.unwrap();
+    assert!(!saved.id.is_empty());
+    assert_eq!(saved.quotation_number, "QT-1001");
+
+    // 3. List quotations
+    let list = costing::list_quotations(&s).await.unwrap();
+    assert_eq!(list.len(), 1);
+    assert_eq!(list[0].box_name, "5-Ply Apple Shipper Box");
+    assert_eq!(list[0].quotation_number, "QT-1001");
+
+    // 4. Delete quotation
+    let deleted_id = costing::delete_quotation(&s, &saved.id).await.unwrap();
+    assert_eq!(deleted_id, saved.id);
+
+    let empty_list = costing::list_quotations(&s).await.unwrap();
+    assert_eq!(empty_list.len(), 0);
+
+    s.db.drop().await.ok();
+}

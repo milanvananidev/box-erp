@@ -2,6 +2,7 @@
 //! indexes, sequence counters and multi-document transactions.
 
 use crate::error::{AppError, AppResult};
+use crate::model::costing::QuotationDoc;
 use crate::model::finance::{default_categories, ExpenseCategory, Party, Transaction};
 use crate::model::inventory::{Material, StockMovement};
 use crate::model::payroll::{PayrollAdjustmentDoc, PayrollRun};
@@ -32,6 +33,8 @@ pub mod names {
     pub const PAYROLL_RUNS: &str = "payroll_runs";
     pub const PAYROLL_ADJUSTMENTS: &str = "payroll_adjustments";
     pub const SETTINGS: &str = "settings";
+    pub const QUOTATIONS: &str = "quotations";
+    pub const PAPER_RATES: &str = "paper_rates";
     pub const COUNTERS: &str = "counters";
 }
 
@@ -57,6 +60,8 @@ impl Store {
     pub fn payroll_runs(&self) -> Collection<PayrollRun> { self.db.collection(names::PAYROLL_RUNS) }
     pub fn payroll_adjustments(&self) -> Collection<PayrollAdjustmentDoc> { self.db.collection(names::PAYROLL_ADJUSTMENTS) }
     pub fn settings(&self) -> Collection<CompanySettingsDoc> { self.db.collection(names::SETTINGS) }
+    pub fn quotations(&self) -> Collection<QuotationDoc> { self.db.collection(names::QUOTATIONS) }
+    pub fn paper_rates(&self) -> Collection<Document> { self.db.collection(names::PAPER_RATES) }
 
     /// Atomically increments and returns a named counter (employee codes, order numbers…).
     pub async fn next_seq(&self, name: &str, start_at: i64) -> AppResult<i64> {
@@ -189,6 +194,16 @@ pub async fn ensure_indexes(db: &Database) -> AppResult<()> {
         ])
         .await?;
     db.collection::<Document>(names::SETTINGS)
+        .create_indexes([unique(doc! { "id": 1 })])
+        .await?;
+    db.collection::<Document>(names::QUOTATIONS)
+        .create_indexes([
+            unique(doc! { "id": 1 }),
+            plain(doc! { "quotationNumber": 1 }),
+            plain(doc! { "date": -1 }),
+        ])
+        .await?;
+    db.collection::<Document>(names::PAPER_RATES)
         .create_indexes([unique(doc! { "id": 1 })])
         .await?;
     Ok(())

@@ -12,6 +12,7 @@ import DashboardPage from "@/features/dashboard/DashboardPage";
 
 // Modules other than the dashboard load on demand to keep start-up fast.
 const FinancePage = lazy(() => import("@/features/finance/FinancePage"));
+const CostingPage = lazy(() => import("@/features/costing/CostingPage"));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const ProductionPage = lazy(() => import("@/features/production/ProductionPage"));
 const InventoryPage = lazy(() => import("@/features/inventory/InventoryPage"));
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "finance", element: <FinancePage /> },
+      { path: "costing", element: <CostingPage /> },
       { path: "production", element: <ProductionPage /> },
       { path: "inventory", element: <InventoryPage /> },
       { path: "workers", element: <WorkersPage /> },

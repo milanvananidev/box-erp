@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Factory, Boxes, Users, Wallet, ArrowLeftRight, BarChart3, Settings, type LucideIcon,
+  LayoutDashboard, Factory, Calculator, Boxes, Users, Wallet, ArrowLeftRight, BarChart3, Settings, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -22,25 +22,26 @@ export const navGroups: NavGroup[] = [
     label: "Operations",
     items: [
       { to: "/production", label: "Production", icon: Factory, hotkey: "2", keywords: ["orders", "jobs", "wastage", "box"] },
-      { to: "/inventory", label: "Inventory", icon: Boxes, hotkey: "3", keywords: ["raw materials", "paper", "stock", "gum", "ink"] },
+      { to: "/costing", label: "Box Costing", icon: Calculator, hotkey: "3", keywords: ["cost", "calculator", "quotation", "rate", "ply"] },
+      { to: "/inventory", label: "Inventory", icon: Boxes, hotkey: "4", keywords: ["raw materials", "paper", "stock", "gum", "ink"] },
     ],
   },
   {
     label: "People",
     items: [
-      { to: "/workers", label: "Workers & HR", icon: Users, hotkey: "4", keywords: ["attendance", "employees", "staff"] },
-      { to: "/payroll", label: "Payroll", icon: Wallet, hotkey: "5", keywords: ["salary", "wages", "advance", "slip"] },
+      { to: "/workers", label: "Workers & HR", icon: Users, hotkey: "5", keywords: ["attendance", "employees", "staff"] },
+      { to: "/payroll", label: "Payroll", icon: Wallet, hotkey: "6", keywords: ["salary", "wages", "advance", "slip"] },
     ],
   },
   {
     label: "Finance",
     items: [
-      { to: "/finance", label: "Income & Expenses", icon: ArrowLeftRight, hotkey: "6", keywords: ["transactions", "ledger", "cash", "bank", "upi"] },
-      { to: "/reports", label: "Reports", icon: BarChart3, hotkey: "7", keywords: ["cash flow", "summary", "export"] },
+      { to: "/finance", label: "Income & Expenses", icon: ArrowLeftRight, hotkey: "7", keywords: ["transactions", "ledger", "cash", "bank", "upi"] },
+      { to: "/reports", label: "Reports", icon: BarChart3, hotkey: "8", keywords: ["cash flow", "summary", "export"] },
     ],
   },
 ];
 
-export const settingsNav: NavItem = { to: "/settings", label: "Settings", icon: Settings, hotkey: "8", keywords: ["database", "connection"] };
+export const settingsNav: NavItem = { to: "/settings", label: "Settings", icon: Settings, hotkey: "9", keywords: ["database", "connection"] };
 
 export const allNavItems: NavItem[] = [...navGroups.flatMap((g) => g.items), settingsNav];

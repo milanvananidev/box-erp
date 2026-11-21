@@ -5,6 +5,7 @@
 //! MongoDB's internal `_id` is ignored on read, so one struct serves both the
 //! database and the UI.
 
+pub mod costing;
 pub mod dashboard;
 pub mod finance;
 pub mod inventory;

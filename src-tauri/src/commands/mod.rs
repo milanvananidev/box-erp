@@ -7,6 +7,7 @@
 //! Production, inventory, payroll, dashboard summary and reports still run
 //! on the frontend mocks (see `src/lib/live-commands.ts`).
 
+pub mod costing;
 pub mod dashboard;
 pub mod db;
 pub mod dev;

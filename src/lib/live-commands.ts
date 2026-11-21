@@ -75,6 +75,12 @@ export const LIVE_COMMANDS = new Set<string>([
   "company_settings_update",
   "vyapar_import",
   "export_xlsx",
+  // Costing & Quotations
+  "quotations_list",
+  "quotation_save",
+  "quotation_delete",
+  "paper_rates_get",
+  "paper_rates_save",
 ]);
 
 export const LIVE_MODULES = [
@@ -82,6 +88,7 @@ export const LIVE_MODULES = [
   "Income & Expenses",
   "Workers & HR",
   "Production",
+  "Box Costing",
   "Inventory",
   "Payroll",
   "Reports",
