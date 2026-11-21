@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window: core IPC only. No shell, fs or http plugins — data access goes through app commands.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

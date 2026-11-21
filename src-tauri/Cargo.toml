@@ -1,0 +1,27 @@
+[package]
+name = "box-erp"
+version = "0.1.0"
+description = "BoxERP — corrugated box manufacturing ERP"
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+name = "box_erp_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+log = "0.4"
+mongodb = "3.2.5"
+keyring = { version = "3.6.3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+futures-util = "0.3.34"
+rust_xlsxwriter = "0.103.0"
+csv = "1.4.0"

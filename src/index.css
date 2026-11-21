@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * BoxERP design tokens
+ * ---------------------------------------------------------------
+ * Every colour used by the app is declared here once. Components only
+ * reference semantic tokens (bg-card, text-muted-foreground, bg-brand …),
+ * never raw hex values, so the palette can be tuned in one place.
+ */
+:root {
+  --radius: 0.75rem;
+
+  /* Surfaces */
+  --background: #f6f7f9;
+  --foreground: #1b2130;
+  --card: #ffffff;
+  --card-foreground: #1b2130;
+  --popover: #ffffff;
+  --popover-foreground: #1b2130;
+  --muted: #f2f3f5;
+  --muted-foreground: #667085;
+  --subtle: #f8f9fb;
+  --border: #e6e8ec;
+  --input: #dfe2e7;
+  --ring: #c48a47;
+
+  /* Brand — corrugated cardboard */
+  --brand-50: #fbf5ee;
+  --brand-100: #f5e7d5;
+  --brand-200: #ebcca6;
+  --brand-300: #ddab72;
+  --brand-400: #cf9254;
+  --brand-500: #c07f3d;
+  --brand-600: #a96a2f;
+  --brand-700: #8a5426;
+  --brand-800: #6e4321;
+  --brand-900: #5a381d;
+
+  --primary: var(--brand-500);
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #1b2130;
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-800);
+
+  /* Status */
+  --success: #2f9e5b;
+  --success-soft: #e8f6ee;
+  --success-foreground: #1f7a43;
+  --danger: #e5484d;
+  --danger-soft: #fdecec;
+  --danger-foreground: #c4252b;
+  --warning: #e3a008;
+  --warning-soft: #fdf5dc;
+  --warning-foreground: #9a6b00;
+  --info: #2f6fe0;
+  --info-soft: #e8f0fd;
+  --info-foreground: #1f56b8;
+  --violet: #6e56cf;
+  --violet-soft: #f0ecfd;
+  --violet-foreground: #5a43b5;
+  --destructive: var(--danger);
+
+  /* Charts */
+  --chart-income: #5cb878;
+  --chart-expense: #f1c093;
+  --chart-brand: var(--brand-500);
+  --chart-track: #efe7dc;
+
+  /* Sidebar */
+  --sidebar: #1e2331;
+  --sidebar-elevated: #272d3d;
+  --sidebar-foreground: #e6e8ee;
+  --sidebar-muted: #8e96a8;
+  --sidebar-border: #2e3446;
+  --sidebar-active-from: #c98f4f;
+  --sidebar-active-to: #9a6432;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-foreground: var(--success-foreground);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-foreground: var(--info-foreground);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-foreground: var(--violet-foreground);
+
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
+  --color-chart-brand: var(--chart-brand);
+  --color-chart-track: var(--chart-track);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-elevated: var(--sidebar-elevated);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-active-from: var(--sidebar-active-from);
+  --color-sidebar-active-to: var(--sidebar-active-to);
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03);
+  --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.08);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    /* Desktop app: no rubber-band scroll, no accidental text selection on chrome */
+    overscroll-behavior: none;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d5d8de;
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #b9bec7;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Printing: only #print-root is printed (see PrintPortal). */
+@media screen {
+  #print-root {
+    display: none;
+  }
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .print-page {
+    break-after: page;
+  }
+  .print-page:last-child {
+    break-after: auto;
+  }
+}
