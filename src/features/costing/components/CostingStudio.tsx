@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormField } from "@/components/shared/FormField";
 import { useParties } from "@/features/finance/api";
 import { useCompany } from "@/lib/company";
+import { formatRupees } from "@/lib/format";
 import {
   calculateBoxCost,
   createStandardLayers,
@@ -284,10 +285,10 @@ export function CostingStudio({
 Client: ${input.client || "Valued Customer"}
 Size: ${input.lengthMm} × ${input.widthMm} × ${input.heightMm} mm (${input.ply}-Ply)
 Order Qty: ${(input.orderQty || 1000).toLocaleString("en-IN")} pcs
-Rate per Box: ₹${result.basicPrice.toFixed(2)}
-GST (${result.taxPercent}%): ₹${result.taxAmount.toFixed(2)}
-Final Rate: ₹${result.priceWithTax.toFixed(2)} / box
-*Total Order: ₹${((result.priceWithTax * (input.orderQty || 1000))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*
+Rate per Box: ${formatRupees(result.basicPrice)}
+GST (${result.taxPercent}%): ${formatRupees(result.taxAmount)}
+Final Rate: ${formatRupees(result.priceWithTax)} / box
+*Total Order: ${formatRupees(result.priceWithTax * (input.orderQty || 1000))}*
 
 Estimated Board BS: ${result.totalBs.toFixed(1)} kg/cm²
 Weight per Box: ${(result.totalWeightKg * 1000).toFixed(0)} grams
@@ -837,7 +838,7 @@ For any queries, please call: ${company.phone}`;
                                 />
                               </td>
                               <td className="p-2 text-right font-mono font-medium">
-                                ₹{layerCost.toFixed(2)}
+                                {formatRupees(layerCost)}
                               </td>
                             </tr>
                           );
@@ -917,13 +918,13 @@ For any queries, please call: ${company.phone}`;
                 <div>
                   <span className="text-[11px] font-bold text-brand-700 tracking-wider uppercase">Live Cost Estimate</span>
                   <CardTitle className="text-xl font-bold text-foreground">
-                    ₹{result.basicPrice.toFixed(2)}{" "}
+                    {formatRupees(result.basicPrice)}{" "}
                     <span className="text-xs font-normal text-muted-foreground">/ box</span>
                   </CardTitle>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-muted-foreground block">With 12% GST</span>
-                  <span className="text-sm font-semibold text-brand-800">₹{result.priceWithTax.toFixed(2)}</span>
+                  <span className="text-sm font-semibold text-brand-800">{formatRupees(result.priceWithTax)}</span>
                 </div>
               </div>
             </CardHeader>
@@ -933,10 +934,10 @@ For any queries, please call: ${company.phone}`;
               <div className="rounded-xl border border-brand-200/80 bg-card p-3 shadow-xs">
                 <div className="flex justify-between items-center text-xs text-muted-foreground mb-1">
                   <span>Total Order ({(input.orderQty || 1000).toLocaleString("en-IN")} pcs)</span>
-                  <span className="font-medium text-foreground">₹{result.priceWithTax.toFixed(2)} ea</span>
+                  <span className="font-medium text-foreground">{formatRupees(result.priceWithTax)} ea</span>
                 </div>
                 <div className="text-2xl font-black tracking-tight text-brand-700 font-mono">
-                  ₹{((result.priceWithTax * (input.orderQty || 1000))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatRupees(result.priceWithTax * (input.orderQty || 1000))}
                 </div>
               </div>
 
@@ -989,39 +990,39 @@ For any queries, please call: ${company.phone}`;
                   <div className="space-y-1.5 text-xs pt-2 font-mono divide-y divide-border/60">
                     <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">Raw Paper Cost</span>
-                      <span>₹{result.totalPaperCost.toFixed(2)}</span>
+                      <span>{formatRupees(result.totalPaperCost)}</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">Wastage ({result.taxPercent}%)</span>
-                      <span>₹{result.wastageCost.toFixed(2)}</span>
+                      <span>{formatRupees(result.wastageCost)}</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">Conversion</span>
-                      <span>₹{result.conversionCost.toFixed(2)}</span>
+                      <span>{formatRupees(result.conversionCost)}</span>
                     </div>
                     {result.printingCost > 0 && (
                       <div className="flex justify-between py-1">
                         <span className="text-muted-foreground">Printing</span>
-                        <span>₹{result.printingCost.toFixed(2)}</span>
+                        <span>{formatRupees(result.printingCost)}</span>
                       </div>
                     )}
                     {result.transportCost > 0 && (
                       <div className="flex justify-between py-1">
                         <span className="text-muted-foreground">Transport</span>
-                        <span>₹{result.transportCost.toFixed(2)}</span>
+                        <span>{formatRupees(result.transportCost)}</span>
                       </div>
                     )}
                     <div className="flex justify-between py-1 font-semibold text-foreground">
                       <span>Total Mfg Cost</span>
-                      <span>₹{result.manufacturingCost.toFixed(2)}</span>
+                      <span>{formatRupees(result.manufacturingCost)}</span>
                     </div>
                     <div className="flex justify-between py-1 text-brand-700">
                       <span>Profit Margin ({input.profitPercent}%)</span>
-                      <span>+₹{result.profitAmount.toFixed(2)}</span>
+                      <span>{formatRupees(result.profitAmount, { sign: true })}</span>
                     </div>
                     <div className="flex justify-between py-1 font-bold text-foreground">
                       <span>Basic Price / Box</span>
-                      <span>₹{result.basicPrice.toFixed(2)}</span>
+                      <span>{formatRupees(result.basicPrice)}</span>
                     </div>
                   </div>
                 )}

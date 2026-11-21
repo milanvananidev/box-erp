@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/shared/StatCard";
+import { formatRupees } from "@/lib/format";
 import {
   usePaperRates,
   useSavePaperRates,
@@ -87,9 +88,9 @@ export function PaperRatesView() {
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Total Grades" value={String(stats.count)} icon={Layers} tone="brand" />
-        <StatCard label="Average Rate" value={`₹ ${stats.avg}`} icon={TrendingUp} tone="info" />
-        <StatCard label="Lowest Rate" value={`₹ ${stats.min}`} icon={TrendingUp} tone="success" />
-        <StatCard label="Highest Rate" value={`₹ ${stats.max}`} icon={TrendingUp} tone="brand" />
+        <StatCard label="Average Rate" value={formatRupees(Number(stats.avg), { decimals: 2 })} icon={TrendingUp} tone="info" />
+        <StatCard label="Lowest Rate" value={formatRupees(Number(stats.min), { decimals: 2 })} icon={TrendingUp} tone="success" />
+        <StatCard label="Highest Rate" value={formatRupees(Number(stats.max), { decimals: 2 })} icon={TrendingUp} tone="brand" />
       </div>
 
       {/* Main Table Card */}

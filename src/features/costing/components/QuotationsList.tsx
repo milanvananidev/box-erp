@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState, ErrorState } from "@/components/shared/states";
+import { formatRupees } from "@/lib/format";
 import {
   useQuotations,
   useDeleteQuotation,
@@ -153,10 +154,10 @@ export function QuotationsList({
                         {q.quantity.toLocaleString("en-IN")} pcs
                       </td>
                       <td className="py-3 px-4 text-right font-mono font-medium">
-                        ₹{q.basicPrice.toFixed(2)}
+                        {formatRupees(q.basicPrice)}
                       </td>
                       <td className="py-3 px-4 text-right font-mono font-bold text-foreground">
-                        ₹{q.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatRupees(q.totalAmount)}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <Badge tone={getStatusBadgeTone(q.status)} size="sm">

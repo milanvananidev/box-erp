@@ -10,7 +10,7 @@ const qty = new Intl.NumberFormat("en-IN");
 export const toPaise = (rupees: number): Paise => Math.round(rupees * 100);
 export const fromPaise = (p: Paise) => p / 100;
 
-/** ₹ 8,50,000 */
+/** ₹ 8,50,000 — Formats paise amounts with ₹ symbol and Indian numbering commas */
 export function formatINR(p: Paise, opts: { precise?: boolean; sign?: boolean } = {}) {
   const r = fromPaise(p);
   const abs = Math.abs(r);
@@ -19,15 +19,30 @@ export function formatINR(p: Paise, opts: { precise?: boolean; sign?: boolean } 
   return `${sign}₹ ${body}`;
 }
 
-/** Compact Indian notation for chart axes: ₹8.5L, ₹1.2Cr, ₹45K */
+/**
+ * Format standard rupee amounts (floating or integer rupees, e.g. from box costing)
+ * with ₹ symbol and Indian numbering commas: e.g. ₹ 1,250.50
+ */
+export function formatRupees(amount: number, opts: { decimals?: number; sign?: boolean } = {}) {
+  const dec = opts.decimals ?? 2;
+  const abs = Math.abs(amount);
+  const formatter = new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  });
+  const sign = amount < 0 ? "−" : opts.sign && amount > 0 ? "+" : "";
+  return `${sign}₹ ${formatter.format(abs)}`;
+}
+
+/** Compact Indian notation for chart axes: ₹ 8.5 L, ₹ 1.2 Cr, ₹ 45 K */
 export function formatINRCompact(p: Paise) {
   const r = fromPaise(p);
   const abs = Math.abs(r);
   const sign = r < 0 ? "−" : "";
-  if (abs >= 1e7) return `${sign}₹${trim(abs / 1e7)}Cr`;
-  if (abs >= 1e5) return `${sign}₹${trim(abs / 1e5)}L`;
-  if (abs >= 1e3) return `${sign}₹${trim(abs / 1e3)}K`;
-  return `${sign}₹${abs}`;
+  if (abs >= 1e7) return `${sign}₹ ${trim(abs / 1e7)} Cr`;
+  if (abs >= 1e5) return `${sign}₹ ${trim(abs / 1e5)} L`;
+  if (abs >= 1e3) return `${sign}₹ ${trim(abs / 1e3)} K`;
+  return `${sign}₹ ${inr.format(abs)}`;
 }
 
 const trim = (n: number) => (Math.round(n * 10) / 10).toString();

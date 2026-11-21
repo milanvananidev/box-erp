@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PrintPortal } from "@/components/shared/PrintPortal";
+import { formatRupees } from "@/lib/format";
 import { useCompany } from "@/lib/company";
 import type { IQuotation } from "../api";
 
@@ -35,10 +36,10 @@ export function QuotationViewDialog({
 Client: ${quotation.clientName}
 Product: ${quotation.boxName} (${quotation.input.lengthMm}×${quotation.input.widthMm}×${quotation.input.heightMm} mm, ${quotation.input.ply}-Ply)
 Order Quantity: ${quotation.quantity.toLocaleString("en-IN")} pcs
-Rate per Box: ₹${quotation.basicPrice.toFixed(2)}
-GST (${quotation.taxPercent}%): ₹${(quotation.basicPrice * quotation.taxPercent / 100).toFixed(2)}
-Total per Box: ₹${(quotation.basicPrice * (1 + quotation.taxPercent / 100)).toFixed(2)}
-*Grand Total: ₹${quotation.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*
+Rate per Box: ${formatRupees(quotation.basicPrice)}
+GST (${quotation.taxPercent}%): ${formatRupees(quotation.basicPrice * quotation.taxPercent / 100)}
+Total per Box: ${formatRupees(quotation.basicPrice * (1 + quotation.taxPercent / 100))}
+*Grand Total: ${formatRupees(quotation.totalAmount)}*
 
 For any queries, please call: ${company.phone}`;
 
@@ -130,10 +131,10 @@ For any queries, please call: ${company.phone}`;
                     {quotation.quantity.toLocaleString("en-IN")} pcs
                   </td>
                   <td className="py-3 px-3 text-right font-mono font-medium">
-                    ₹{quotation.basicPrice.toFixed(2)}
+                    {formatRupees(quotation.basicPrice)}
                   </td>
                   <td className="py-3 px-3 text-right font-mono font-bold">
-                    ₹{(quotation.basicPrice * quotation.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatRupees(quotation.basicPrice * quotation.quantity)}
                   </td>
                 </tr>
               </tbody>
@@ -141,19 +142,19 @@ For any queries, please call: ${company.phone}`;
                 <tr>
                   <td colSpan={3} className="py-2 px-3 text-right text-muted-foreground">Subtotal (Basic)</td>
                   <td className="py-2 px-3 text-right font-mono">
-                    ₹{(quotation.basicPrice * quotation.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatRupees(quotation.basicPrice * quotation.quantity)}
                   </td>
                 </tr>
                 <tr>
                   <td colSpan={3} className="py-2 px-3 text-right text-muted-foreground">GST ({quotation.taxPercent}%)</td>
                   <td className="py-2 px-3 text-right font-mono">
-                    ₹{(quotation.basicPrice * quotation.quantity * quotation.taxPercent / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatRupees(quotation.basicPrice * quotation.quantity * quotation.taxPercent / 100)}
                   </td>
                 </tr>
                 <tr className="border-t border-border text-sm font-bold text-brand-700">
                   <td colSpan={3} className="py-2.5 px-3 text-right">Total Net Amount</td>
                   <td className="py-2.5 px-3 text-right font-mono">
-                    ₹{quotation.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatRupees(quotation.totalAmount)}
                   </td>
                 </tr>
               </tfoot>
@@ -224,10 +225,10 @@ For any queries, please call: ${company.phone}`;
                       <div>{quotation.input.lengthMm} × {quotation.input.widthMm} × {quotation.input.heightMm} mm ({quotation.input.ply}-Ply)</div>
                       <div>Sheet: {quotation.result.sheetLengthInch}&quot; × {quotation.result.sheetWidthInch}&quot;</div>
                     </td>
-                    <td className="border-r border-black p-2 text-right font-mono">{quotation.quantity} pcs</td>
-                    <td className="border-r border-black p-2 text-right font-mono">₹{quotation.basicPrice.toFixed(2)}</td>
+                    <td className="border-r border-black p-2 text-right font-mono">{quotation.quantity.toLocaleString("en-IN")} pcs</td>
+                    <td className="border-r border-black p-2 text-right font-mono">{formatRupees(quotation.basicPrice)}</td>
                     <td className="p-2 text-right font-mono font-bold">
-                      ₹{(quotation.basicPrice * quotation.quantity).toFixed(2)}
+                      {formatRupees(quotation.basicPrice * quotation.quantity)}
                     </td>
                   </tr>
                 </tbody>
@@ -235,12 +236,12 @@ For any queries, please call: ${company.phone}`;
                   <tr className="border-t border-black font-semibold">
                     <td colSpan={3} className="border-r border-black p-2 text-right">GST ({quotation.taxPercent}%)</td>
                     <td className="p-2 text-right font-mono">
-                      ₹{(quotation.basicPrice * quotation.quantity * quotation.taxPercent / 100).toFixed(2)}
+                      {formatRupees(quotation.basicPrice * quotation.quantity * quotation.taxPercent / 100)}
                     </td>
                   </tr>
                   <tr className="border-t border-black font-bold">
                     <td colSpan={3} className="border-r border-black p-2 text-right">Total Amount</td>
-                    <td className="p-2 text-right font-mono">₹{quotation.totalAmount.toFixed(2)}</td>
+                    <td className="p-2 text-right font-mono">{formatRupees(quotation.totalAmount)}</td>
                   </tr>
                 </tfoot>
               </table>
