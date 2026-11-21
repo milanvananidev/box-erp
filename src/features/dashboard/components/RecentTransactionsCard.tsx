@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftRight, ArrowRight, Receipt } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, Receipt, Plus, ArrowDownLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatDateShort, formatINR } from "@/lib/format";
+import { useUI } from "@/stores/ui";
 import { useRecentTransactions } from "../api";
 
 export function RecentTransactionsCard() {
   const navigate = useNavigate();
+  const openTxnSheet = useUI((s) => s.openTxnSheet);
   const { data: transactions = [], isLoading } = useRecentTransactions();
 
   return (
@@ -79,6 +82,27 @@ export function RecentTransactionsCard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-border/60">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openTxnSheet("in")}
+          className="text-xs h-8 text-emerald-700 font-medium border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer shadow-2xs"
+          title="Add Income (⌘+Shift+I)"
+        >
+          <ArrowDownLeft className="size-3.5 text-emerald-600" /> + Add Income
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => openTxnSheet("out")}
+          className="text-xs h-8 bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-xs cursor-pointer"
+          title="Add Expense (⌘+Shift+E)"
+        >
+          <Plus className="size-3.5" /> - Add Expense
+        </Button>
       </div>
     </div>
   );

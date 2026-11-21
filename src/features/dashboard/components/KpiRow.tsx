@@ -1,11 +1,13 @@
-import { ArrowDownLeft, ArrowUpRight, TrendingUp, Users } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, TrendingUp, Users, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatINR } from "@/lib/format";
+import { useUI } from "@/stores/ui";
 import { useDashboardSummary } from "../api";
 
 export function KpiRow() {
   const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
+  const openTxnSheet = useUI((s) => s.openTxnSheet);
 
   const cashInVal = data?.cashIn.value ?? 0;
   const cashOutVal = data?.cashOut.value ?? 0;
@@ -29,9 +31,22 @@ export function KpiRow() {
               {isLoading ? "—" : formatINR(cashInVal)}
             </div>
           </div>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50">
-            <ArrowDownLeft className="size-5" />
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openTxnSheet("in");
+              }}
+              title="Add Income (⌘+Shift+I)"
+              className="flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer shadow-2xs"
+            >
+              <Plus className="size-3" /> Income
+            </button>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50">
+              <ArrowDownLeft className="size-5" />
+            </span>
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
@@ -63,9 +78,22 @@ export function KpiRow() {
               {isLoading ? "—" : formatINR(cashOutVal)}
             </div>
           </div>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-4 ring-rose-50/50">
-            <ArrowUpRight className="size-5" />
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openTxnSheet("out");
+              }}
+              title="Add Expense (⌘+Shift+E)"
+              className="flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all cursor-pointer shadow-2xs"
+            >
+              <Plus className="size-3" /> Expense
+            </button>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-4 ring-rose-50/50">
+              <ArrowUpRight className="size-5" />
+            </span>
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">

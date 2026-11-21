@@ -1,6 +1,7 @@
-import { Bell, ChevronDown, Keyboard, LogOut, Search, Settings, PackageX, CalendarClock } from "lucide-react";
+import { Bell, ChevronDown, Keyboard, LogOut, Search, Settings, PackageX, CalendarClock, ArrowDownLeft, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as Popover from "@radix-ui/react-popover";
+import { Button } from "@/components/ui/button";
 import { usePageMetaStore } from "@/hooks/use-page-meta";
 import { modKeyLabel } from "@/hooks/use-hotkeys";
 import { useUI } from "@/stores/ui";
@@ -70,6 +71,7 @@ function NotificationsButton() {
 export function Topbar() {
   const { title, subtitle } = usePageMetaStore();
   const setCommandOpen = useUI((s) => s.setCommandOpen);
+  const openTxnSheet = useUI((s) => s.openTxnSheet);
   const navigate = useNavigate();
 
   return (
@@ -79,9 +81,29 @@ export function Topbar() {
         {subtitle && <p className="truncate text-[15px] text-muted-foreground">{subtitle}</p>}
       </div>
 
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openTxnSheet("in")}
+          className="h-10 gap-1.5 border-emerald-300 bg-emerald-50/50 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer shadow-2xs"
+          title="Add Income (⌘+Shift+I)"
+        >
+          <ArrowDownLeft className="size-4 text-emerald-600" /> + Income
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => openTxnSheet("out")}
+          className="h-10 gap-1.5 bg-rose-600 hover:bg-rose-700 text-xs font-semibold text-white cursor-pointer shadow-xs"
+          title="Add Expense (⌘+Shift+E)"
+        >
+          <Plus className="size-4" /> + Expense
+        </Button>
+      </div>
+
       <button
         onClick={() => setCommandOpen(true)}
-        className="flex h-11 w-[min(420px,32vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors cursor-pointer hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
+        className="flex h-11 w-[min(380px,26vw)] items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left text-[15px] text-[#667085] shadow-xs transition-colors cursor-pointer hover:border-[#cfd4dc] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-100"
       >
         <Search className="size-[18px] text-[#475467]" />
         <span className="flex-1 truncate">Search workers, materials, costing…</span>
