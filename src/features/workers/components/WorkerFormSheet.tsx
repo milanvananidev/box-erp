@@ -139,7 +139,7 @@ export function WorkerFormSheet({ open, worker, onClose, onSaved }: { open: bool
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   label={`Rate (₹${WAGE_UNIT[wageType]})`} htmlFor="wk-rate" error={errors.wageRate?.message} required
-                  hint={wageType === "monthly" ? "Full monthly salary" : wageType === "piece_rate" ? "Rate per piece" : "Rate per day"}
+                  hint={wageType === "monthly" ? "Pro-rated on days worked (half day = 0.5)" : wageType === "piece_rate" ? "Paid on pieces logged in attendance" : "Half day pays 50%"}
                 >
                   <Controller
                     control={control}

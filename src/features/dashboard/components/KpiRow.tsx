@@ -142,16 +142,16 @@ export function KpiRow() {
         </div>
       </div>
 
-      {/* 4. Active Workers */}
+      {/* 4. Active Workers & Attendance */}
       <div
-        onClick={() => navigate("/workers")}
+        onClick={() => navigate("/workers?tab=attendance")}
         className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-xs transition-all hover:shadow-card hover:border-brand-200 cursor-pointer overflow-hidden"
       >
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">Active Workers</span>
+            <span className="text-xs font-medium text-muted-foreground">Workers Present</span>
             <div className="text-2xl font-bold tracking-tight text-foreground font-mono">
-              {isLoading ? "—" : workerCount}
+              {isLoading ? "—" : data?.attendance ? `${data.attendance.present + data.attendance.halfDay} / ${data.attendance.total}` : workerCount}
             </div>
           </div>
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 ring-4 ring-violet-50/50">
@@ -160,7 +160,8 @@ export function KpiRow() {
         </div>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>On payroll</span>
+          <span>{data?.attendance ? `${data.attendance.present} present · ${data.attendance.absent} absent` : "Active on payroll"}</span>
+          <span className="text-brand-600 font-semibold group-hover:underline">Mark →</span>
         </div>
       </div>
     </div>

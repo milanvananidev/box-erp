@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import {
   ArrowLeftRight,
+  CalendarCheck,
   FileSpreadsheet,
   Landmark,
   Receipt,
@@ -18,9 +19,10 @@ import { MonthlyStatementView } from "./components/MonthlyStatementView";
 import { ProfitReportView } from "./components/ProfitReportView";
 import { CashFlowReportView } from "./components/CashFlowReportView";
 import { LabourReportView } from "./components/LabourReportView";
+import { AttendanceReportView } from "./components/AttendanceReportView";
 import { PayrollReportView } from "./components/PayrollReportView";
 
-type ReportId = "monthly" | "profit" | "cash-flow" | "labour" | "payroll";
+type ReportId = "monthly" | "profit" | "cash-flow" | "labour" | "attendance" | "payroll";
 
 const REPORTS: { group: string; items: { id: ReportId; label: string; hint: string; icon: LucideIcon }[] }[] = [
   {
@@ -45,6 +47,7 @@ const REPORTS: { group: string; items: { id: ReportId; label: string; hint: stri
     group: "Labour & Wages",
     items: [
       { id: "labour", label: "Labour Cost", hint: "By month and department", icon: Receipt },
+      { id: "attendance", label: "Attendance Summary", hint: "By worker and department", icon: CalendarCheck },
       { id: "payroll", label: "Payroll Register", hint: "Gross, deductions, paid", icon: Wallet },
     ],
   },
@@ -82,6 +85,8 @@ export default function ReportsPage() {
         return <CashFlowReportView range={range} />;
       case "labour":
         return <LabourReportView range={range} />;
+      case "attendance":
+        return <AttendanceReportView range={range} />;
       case "payroll":
         return <PayrollReportView range={range} />;
       case "profit":

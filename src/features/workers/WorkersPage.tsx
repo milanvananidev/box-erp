@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Download, HandCoins, IdCard, Plus, Users, Wallet } from "lucide-react";
+import { CalendarCheck, Download, HandCoins, IdCard, Plus, UserCheck, Users, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useHotkeys } from "@/hooks/use-hotkeys";
@@ -16,17 +16,18 @@ import { formatDate, formatINR, fromPaise } from "@/lib/format";
 import { cn, initials } from "@/lib/utils";
 import { useDashboardSummary } from "@/features/dashboard/api";
 import { DEPARTMENTS, WAGE_TYPE_LABEL, WAGE_UNIT, useWorkerRoster, type WorkerRow } from "./api";
+import { AttendanceBoard } from "./components/AttendanceBoard";
 import { WorkerFormSheet } from "./components/WorkerFormSheet";
 import { WorkerDetailSheet } from "./components/WorkerDetailSheet";
 import { AdvanceDialog } from "./components/AdvanceDialog";
 import { AdvancesTable } from "./components/AdvancesTable";
 
-type Tab = "workers" | "advances";
+type Tab = "attendance" | "workers" | "advances";
 
 export default function WorkersPage() {
-  usePageMeta("Workers & HR", "Worker profiles and salary advances");
+  usePageMeta("Workers & HR", "Daily attendance, worker profiles and salary advances");
   const [params, setParams] = useSearchParams();
-  const tab = (params.get("tab") as Tab | null) ?? "workers";
+  const tab = (params.get("tab") as Tab | null) ?? "attendance";
   const openId = params.get("worker");
   const editId = params.get("edit");
   const creating = params.get("new") === "1";
@@ -131,24 +132,30 @@ export default function WorkersPage() {
 
   const openWorker = roster.data?.find((w) => w.id === openId);
   const editWorker = roster.data?.find((w) => w.id === editId);
+  const att = summary.data?.attendance;
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Active Workers" icon={Users} tone="violet" loading={roster.isLoading} value={kpi.active}
           footnote={`${kpi.byType.daily} daily · ${kpi.byType.monthly} monthly · ${kpi.byType.piece} piece`} onClick={() => patch({ tab: "workers" })} />
+        <StatCard label="Present Today" icon={UserCheck} tone="success" loading={!att} value={att && `${att.present + att.halfDay} / ${att.total}`}
+          footnote={att && `${att.halfDay} half day · ${att.absent} absent · ${att.leave} leave`} onClick={() => patch({ tab: null })} />
         <StatCard label="Advances Due" icon={HandCoins} tone="brand" loading={roster.isLoading} value={formatINR(kpi.advances)}
           footnote={`${kpi.withAdvance} workers · recovered in payroll`} onClick={() => patch({ tab: "advances" })} />
         <StatCard label="Salary Accrued" icon={Wallet} tone="info" loading={!summary.data} value={summary.data && formatINR(summary.data.salaryPending.amount)}
           footnote={summary.data && `This month · due ${formatDate(summary.data.salaryPending.dueOn)}`} />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => patch({ tab: v === "workers" ? null : v })}>
+      <Tabs value={tab} onValueChange={(v) => patch({ tab: v === "attendance" ? null : v })}>
         <TabsList className="h-10">
+          <TabsTrigger value="attendance" className="h-8 px-4"><CalendarCheck className="size-4" /> Daily attendance</TabsTrigger>
           <TabsTrigger value="workers" className="h-8 px-4"><IdCard className="size-4" /> Workers</TabsTrigger>
           <TabsTrigger value="advances" className="h-8 px-4"><HandCoins className="size-4" /> Advances</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {tab === "attendance" && <AttendanceBoard />}
 
       {tab === "workers" && (
         <DataTable
